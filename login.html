@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login - Vaporia Inventory System</title>
 <style>
-/* General styles */
+/* ===== Body & Container ===== */
 body {
     font-family: 'Segoe UI', sans-serif;
     background: #cbb9a8;
@@ -17,7 +17,6 @@ body {
     padding: 20px;
 }
 
-/* Container */
 .login-container {
     display: flex;
     flex-wrap: wrap;
@@ -28,7 +27,7 @@ body {
     overflow: hidden;
 }
 
-/* Left and Right panels */
+/* ===== Left & Right Sections ===== */
 .login-left, .login-right {
     flex: 1 1 300px;
     padding: 40px;
@@ -37,37 +36,40 @@ body {
     align-items: center;
 }
 
-.login-left { background: #f5f5f5; }
-.login-left img { width: 70%; max-width: 250px; }
+.login-left {
+    background: #f5f5f5;
+}
+.login-left img {
+    width: 70%;
+    max-width: 250px;
+}
 
-.login-right { flex-direction: column; }
+.login-right {
+    flex-direction: column;
+}
 
-/* Typography */
+/* ===== Form & Inputs ===== */
 h2 { text-align: center; margin-bottom: 30px; color: #333; }
-.error { color: red; text-align: center; margin-bottom: 15px; display: none; }
-
-/* Form */
-.form-group { margin-bottom: 20px; position: relative; }
+.error {
+    color: red;
+    text-align: center;
+    margin-bottom: 15px;
+    display: none;
+}
+.form-group { margin-bottom: 20px; }
 input[type="text"], input[type="password"] {
     width: 100%;
     padding: 12px;
     border: 1px solid #ccc;
     border-radius: 25px;
     outline: none;
-    font-size: 1rem;
 }
 input:focus { border-color: #8b6f47; }
 
-/* Remember me */
-.remember {
-    display: flex;
-    align-items: center;
-    margin-bottom: 15px;
-    font-size: 14px;
-}
+/* ===== Remember & Button ===== */
+.remember { display: flex; align-items: center; margin-bottom: 15px; font-size: 14px; }
 .remember input { margin-right: 8px; }
 
-/* Button */
 button {
     width: 100%;
     background: #8b6f47;
@@ -75,12 +77,11 @@ button {
     border: none;
     padding: 12px;
     border-radius: 25px;
-    font-size: 16px;
     cursor: pointer;
 }
 button:hover { background: #6d5837; }
 
-/* Bottom links */
+/* ===== Links ===== */
 .bottom-links { text-align: center; margin-top: 20px; }
 .bottom-links a {
     text-decoration: none;
@@ -94,12 +95,12 @@ button:hover { background: #6d5837; }
 <body>
 
 <div class="login-container">
-    <!-- Left panel -->
+    <!-- Left side (Logo) -->
     <div class="login-left">
         <img src="vaporia.jpg" alt="Vaporia Logo">
     </div>
 
-    <!-- Right panel -->
+    <!-- Right side (Form) -->
     <div class="login-right">
         <h2>Welcome Back!</h2>
         <div class="error" id="error-message"></div>
@@ -130,14 +131,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const errorDiv = document.getElementById('error-message');
     const rememberCheckbox = document.getElementById('remember');
 
-    // Prefill remembered username
+    // Prefill username if remembered
     const rememberedUser = localStorage.getItem('rememberedUser');
     if (rememberedUser) {
         loginForm.username.value = rememberedUser;
         rememberCheckbox.checked = true;
     }
 
-    loginForm.addEventListener('submit', async (e) => {
+    loginForm.addEventListener('submit', async e => {
         e.preventDefault();
         errorDiv.style.display = "none";
 
@@ -155,20 +156,16 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = await res.json();
 
             if (res.ok) {
-                // Save username if Remember Me checked
-                if (rememberCheckbox.checked) {
-                    localStorage.setItem('rememberedUser', username);
-                } else {
-                    localStorage.removeItem('rememberedUser');
-                }
+                // Remember username if checked
+                if (rememberCheckbox.checked) localStorage.setItem('rememberedUser', username);
+                else localStorage.removeItem('rememberedUser');
 
                 window.location.href = "dashboard.html";
             } else {
                 errorDiv.textContent = data.message || "Login failed";
                 errorDiv.style.display = "block";
             }
-
-        } catch (err) {
+        } catch(err) {
             console.error(err);
             errorDiv.textContent = "Server not reachable";
             errorDiv.style.display = "block";

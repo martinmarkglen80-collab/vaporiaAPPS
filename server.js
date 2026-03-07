@@ -9,44 +9,44 @@ require("dotenv").config();
 
 const app = express();
 
-/* ===============================
+/* =========================
    Middleware
-================================= */
+========================= */
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(__dirname));
 
-/* ===============================
+/* =========================
    MongoDB Connection
-================================= */
+========================= */
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("✅ MongoDB Connected"))
     .catch(err => console.log("❌ MongoDB Error:", err));
 
-/* ===============================
-   User Schema
-================================= */
+/* =========================
+   User Schema & Model
+========================= */
 const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true }
 });
-
 const User = mongoose.model("User", userSchema);
 
-/* ===============================
+/* =========================
    Routes
-================================= */
+========================= */
 
-// Serve login.html
+// Serve login page
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "login.html")));
 
 /* ===== REGISTER ===== */
 app.post("/register", async (req, res) => {
     try {
         const { username, email, password } = req.body;
+
         if (!username || !email || !password)
             return res.status(400).json({ message: "All fields required" });
 
@@ -69,6 +69,7 @@ app.post("/register", async (req, res) => {
 app.post("/login", async (req, res) => {
     try {
         const { username, password } = req.body;
+
         if (!username || !password)
             return res.status(400).json({ message: "Username and password required" });
 
@@ -77,6 +78,9 @@ app.post("/login", async (req, res) => {
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
+
+        if (!process.env.JWT_SECRET) 
+            return res.status(500).json({ message: "JWT secret not set" });
 
         const token = jwt.sign(
             { id: user._id, username: user.username },
@@ -104,8 +108,28 @@ app.post("/logout", (req, res) => {
     res.json({ message: "Logged out" });
 });
 
-/* ===============================
+/* ===== DASHBOARD (dummy data) ===== */
+app.get("/api/dashboard", (req, res) => {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+
+    try {
+        jwt.verify(token, process.env.JWT_SECRET);
+        // Dummy dashboard data
+        res.json({
+            totalItems: 120,
+            availableItems: 90,
+            outOfStock: 30,
+            totalSales: 50,
+            totalRevenue: 1500
+        });
+    } catch {
+        res.status(401).json({ message: "Invalid token" });
+    }
+});
+
+/* =========================
    Start Server
-================================= */
+========================= */
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🔥 Server running on port ${PORT}`));
