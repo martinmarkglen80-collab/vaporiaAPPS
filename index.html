@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome - Vaporia</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #cbb9a8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .welcome-container {
+      display: flex;
+      flex-wrap: wrap;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      width: 850px;
+      max-width: 100%;
+      overflow: hidden;
+    }
+
+    .welcome-left, .welcome-right {
+      flex: 1 1 300px;
+      padding: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .welcome-left {
+      background-color: #f5f5f5;
+    }
+
+    .welcome-left img {
+      width: 70%;
+      max-width: 250px;
+    }
+
+    .welcome-right {
+      flex-direction: column;
+    }
+
+    .welcome-right h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #333;
+      font-size: 2rem;
+    }
+
+    .welcome-right button {
+      width: 100%;
+      background-color: #8b6f47;
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 25px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .welcome-right button:hover {
+      background-color: #6d5837;
+    }
+
+    /* Responsive */
+    @media(max-width:768px) {
+      .welcome-container { flex-direction: column; }
+      .welcome-left, .welcome-right { padding: 30px; }
+      .welcome-left img { width: 60%; }
+    }
+
+    @media(max-width:480px) {
+      .welcome-left img { width: 50%; }
+      .welcome-right h2 { font-size: 1.5rem; }
+      .welcome-right button { font-size: 14px; padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="welcome-container">
+    <div class="welcome-left">
+      <img src="vaporia.jpg" alt="Vaporia Logo">
+    </div>
+    <div class="welcome-right">
+      <h2>Welcome to Management For Vaporia!</h2>
+      <button onclick="goToLogin()">Get Started</button>
+    </div>
+  </div>
+
+  <script>
+    function goToLogin() {
+      // Redirect to login page
+      window.location.href = "login.html";
+    }
+  </script>
+
+</body>
+</html>
