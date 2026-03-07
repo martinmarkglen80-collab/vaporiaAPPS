@@ -1,252 +1,181 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Vaporia Inventory System</title>
-    <style>
-        /* Body & layout */
-        body {
-            font-family:'Segoe UI', Tahoma, Geneva, Verdana,sans-serif;
-            background:#cbb9a8;
-            display:flex;
-            justify-content:center;
-            align-items:center;
-            height:100vh;
-            margin:0;
-            padding:20px;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - Vaporia Inventory System</title>
+<style>
+/* General styles */
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #cbb9a8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    padding: 20px;
+}
 
-        .login-container {
-            display:flex;
-            flex-wrap:wrap;
-            background:white;
-            border-radius:12px;
-            box-shadow:0 4px 12px rgba(0,0,0,0.2);
-            width:850px;
-            max-width:100%;
-            overflow:hidden;
-        }
+/* Container */
+.login-container {
+    display: flex;
+    flex-wrap: wrap;
+    background: white;
+    border-radius: 12px;
+    width: 850px;
+    max-width: 100%;
+    overflow: hidden;
+}
 
-        .login-left, .login-right {
-            flex:1 1 300px;
-            padding:40px;
-            display:flex;
-            justify-content:center;
-            align-items:center;
-        }
+/* Left and Right panels */
+.login-left, .login-right {
+    flex: 1 1 300px;
+    padding: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
-        .login-left {
-            background:#f5f5f5;
-        }
+.login-left { background: #f5f5f5; }
+.login-left img { width: 70%; max-width: 250px; }
 
-        .login-left img {
-            width:70%;
-            max-width:250px;
-        }
+.login-right { flex-direction: column; }
 
-        .login-right {
-            flex-direction:column;
-        }
+/* Typography */
+h2 { text-align: center; margin-bottom: 30px; color: #333; }
+.error { color: red; text-align: center; margin-bottom: 15px; display: none; }
 
-        h2 {
-            text-align:center;
-            margin-bottom:30px;
-            color:#333;
-        }
+/* Form */
+.form-group { margin-bottom: 20px; position: relative; }
+input[type="text"], input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 25px;
+    outline: none;
+    font-size: 1rem;
+}
+input:focus { border-color: #8b6f47; }
 
-        .form-group {
-            margin-bottom:20px;
-            position:relative;
-        }
+/* Remember me */
+.remember {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+.remember input { margin-right: 8px; }
 
-        input[type="text"],
-        input[type="password"] {
-            width:100%;
-            padding:12px;
-            border:1px solid #ccc;
-            border-radius:25px;
-            outline:none;
-            font-size:1rem;
-        }
+/* Button */
+button {
+    width: 100%;
+    background: #8b6f47;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 25px;
+    font-size: 16px;
+    cursor: pointer;
+}
+button:hover { background: #6d5837; }
 
-        input:focus {
-            border-color:#8b6f47;
-        }
+/* Bottom links */
+.bottom-links { text-align: center; margin-top: 20px; }
+.bottom-links a {
+    text-decoration: none;
+    color: #8b6f47;
+    font-weight: 500;
+}
+.bottom-links a:hover { text-decoration: underline; }
 
-        .remember {
-            display:flex;
-            align-items:center;
-            margin-bottom:15px;
-            font-size:14px;
-        }
-
-        .remember input {
-            margin-right:8px;
-        }
-
-        button {
-            width:100%;
-            background:#8b6f47;
-            color:white;
-            border:none;
-            padding:12px;
-            border-radius:25px;
-            font-size:16px;
-            cursor:pointer;
-        }
-
-        button:hover {
-            background:#6d5837;
-        }
-
-        .bottom-links {
-            text-align:center;
-            margin-top:20px;
-        }
-
-        .bottom-links a {
-            text-decoration:none;
-            color:#8b6f47;
-            font-weight:500;
-        }
-
-        .bottom-links a:hover {
-            text-decoration:underline;
-        }
-
-        .error {
-            color:red;
-            text-align:center;
-            margin-bottom:15px;
-            display:none;
-        }
-
-        /* Show/hide password */
-        .show-password {
-            position:absolute;
-            right:15px;
-            top:50%;
-            transform:translateY(-50%);
-            cursor:pointer;
-            font-size:14px;
-            color:#666;
-            user-select:none;
-        }
-    </style>
+</style>
 </head>
 <body>
 
-    <div class="login-container">
-        <!-- Left side: Logo -->
-        <div class="login-left">
-            <img src="vaporia.jpg" alt="Vaporia Logo">
-        </div>
-
-        <!-- Right side: Login form -->
-        <div class="login-right">
-            <h2>Welcome Back!</h2>
-            <div class="error" id="error-message"></div>
-
-            <form id="loginForm">
-                <div class="form-group">
-                    <input type="text" name="username" placeholder="Enter Username..." required>
-                </div>
-
-                <div class="form-group">
-                    <input type="password" name="password" placeholder="Password" required>
-                    <span class="show-password" id="togglePassword">Show</span>
-                </div>
-
-                <div class="remember">
-                    <input type="checkbox" id="remember" name="remember">
-                    <label for="remember">Remember Me</label>
-                </div>
-
-                <button type="submit">Login</button>
-            </form>
-
-            <div class="bottom-links">
-                <a href="register.html">Create an Account!</a>
-            </div>
-        </div>
+<div class="login-container">
+    <!-- Left panel -->
+    <div class="login-left">
+        <img src="vaporia.jpg" alt="Vaporia Logo">
     </div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const loginForm = document.getElementById('loginForm');
-            const errorDiv = document.getElementById('error-message');
-            const rememberCheckbox = document.getElementById('remember');
-            const usernameInput = loginForm.username;
-            const passwordInput = loginForm.password;
-            const togglePassword = document.getElementById('togglePassword');
+    <!-- Right panel -->
+    <div class="login-right">
+        <h2>Welcome Back!</h2>
+        <div class="error" id="error-message"></div>
 
-            // Prefill remembered username
-            const rememberedUser = localStorage.getItem('rememberedUser');
-            if (rememberedUser) {
-                usernameInput.value = rememberedUser;
-                rememberCheckbox.checked = true;
+        <form id="loginForm">
+            <div class="form-group">
+                <input type="text" name="username" placeholder="Enter Username..." required>
+            </div>
+            <div class="form-group">
+                <input type="password" name="password" placeholder="Password" required>
+            </div>
+            <div class="remember">
+                <input type="checkbox" id="remember" name="remember">
+                <label for="remember">Remember Me</label>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+
+        <div class="bottom-links">
+            <a href="register.html">Create an Account!</a>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const loginForm = document.getElementById('loginForm');
+    const errorDiv = document.getElementById('error-message');
+    const rememberCheckbox = document.getElementById('remember');
+
+    // Prefill remembered username
+    const rememberedUser = localStorage.getItem('rememberedUser');
+    if (rememberedUser) {
+        loginForm.username.value = rememberedUser;
+        rememberCheckbox.checked = true;
+    }
+
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errorDiv.style.display = "none";
+
+        const username = loginForm.username.value.trim();
+        const password = loginForm.password.value;
+
+        try {
+            const res = await fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
+                credentials: 'include'
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                // Save username if Remember Me checked
+                if (rememberCheckbox.checked) {
+                    localStorage.setItem('rememberedUser', username);
+                } else {
+                    localStorage.removeItem('rememberedUser');
+                }
+
+                window.location.href = "dashboard.html";
+            } else {
+                errorDiv.textContent = data.message || "Login failed";
+                errorDiv.style.display = "block";
             }
 
-            // Show/hide password toggle
-            togglePassword.addEventListener('click', () => {
-                if (passwordInput.type === 'password') {
-                    passwordInput.type = 'text';
-                    togglePassword.textContent = 'Hide';
-                } else {
-                    passwordInput.type = 'password';
-                    togglePassword.textContent = 'Show';
-                }
-            });
-
-            // Form submission
-            loginForm.addEventListener('submit', async function(e){
-                e.preventDefault();
-                errorDiv.style.display = 'none';
-
-                const data = {
-                    username: usernameInput.value.trim(),
-                    password: passwordInput.value.trim()
-                };
-
-                if (!data.username || !data.password) {
-                    errorDiv.textContent = "Username and password are required.";
-                    errorDiv.style.display = "block";
-                    return;
-                }
-
-                try {
-                    const res = await fetch('/login', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(data),
-                        credentials: 'include'
-                    });
-
-                    const result = await res.json();
-
-                    if (res.ok) {
-                        // Remember Me functionality
-                        if (rememberCheckbox.checked) {
-                            localStorage.setItem('rememberedUser', data.username);
-                        } else {
-                            localStorage.removeItem('rememberedUser');
-                        }
-
-                        localStorage.setItem("user", result.user.username);
-                        window.location.href = "dashboard.html";
-                    } else {
-                        errorDiv.textContent = result.message || "Login failed";
-                        errorDiv.style.display = "block";
-                    }
-                } catch(err) {
-                    console.error("Login error:", err);
-                    errorDiv.textContent = "Server error. Please try again.";
-                    errorDiv.style.display = "block";
-                }
-            });
-        });
-    </script>
+        } catch (err) {
+            console.error(err);
+            errorDiv.textContent = "Server not reachable";
+            errorDiv.style.display = "block";
+        }
+    });
+});
+</script>
 
 </body>
 </html>
