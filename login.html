@@ -1,198 +1,249 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - Vaporia Inventory System</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color:#cbb9a8;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      padding: 20px;
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - Vaporia Inventory</title>
+
+<style>
+body{
+    font-family:'Segoe UI', sans-serif;
+    background-color:#cbb9a8;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    margin:0;
+    padding:20px;
+}
+
+.login-container{
+    display:flex;
+    flex-wrap:wrap;
+    background:white;
+    border-radius:12px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.2);
+    width:850px;
+    max-width:100%;
+    overflow:hidden;
+}
+
+.login-left,
+.login-right{
+    flex:1 1 300px;
+    padding:40px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.login-left{
+    background-color:#f5f5f5;
+}
+
+.login-left img{
+    width:70%;
+    max-width:250px;
+}
+
+.login-right{
+    flex-direction:column;
+}
+
+h2{
+    text-align:center;
+    margin-bottom:30px;
+    color:#333;
+}
+
+.form-group{
+    margin-bottom:20px;
+}
+
+input[type="text"],
+input[type="password"]{
+    width:100%;
+    padding:12px;
+    border:1px solid #ccc;
+    border-radius:25px;
+    outline:none;
+    font-size:1rem;
+    transition:border-color 0.3s ease;
+}
+
+input:focus{
+    border-color:#8b6f47;
+}
+
+.remember{
+    display:flex;
+    align-items:center;
+    margin-bottom:15px;
+    font-size:14px;
+}
+
+.remember input{
+    margin-right:8px;
+}
+
+button{
+    width:100%;
+    background-color:#8b6f47;
+    color:white;
+    border:none;
+    padding:12px;
+    border-radius:25px;
+    font-size:16px;
+    cursor:pointer;
+    transition:background-color 0.3s ease;
+}
+
+button:hover{
+    background-color:#6d5837;
+}
+
+.bottom-links{
+    text-align:center;
+    margin-top:20px;
+}
+
+.bottom-links a{
+    text-decoration:none;
+    color:#8b6f47;
+    font-weight:500;
+}
+
+.bottom-links a:hover{
+    text-decoration:underline;
+}
+
+.error{
+    color:red;
+    text-align:center;
+    margin-bottom:15px;
+    display:none;
+}
+
+@media(max-width:768px){
+    .login-container{
+        flex-direction:column;
     }
 
-    .login-container {
-      display: flex;
-      flex-wrap: wrap;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      width: 850px;
-      max-width: 100%;
-      overflow: hidden;
+    .login-left,
+    .login-right{
+        padding:30px;
     }
 
-    .login-left, .login-right {
-      flex: 1 1 300px;
-      padding: 40px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+    .login-left img{
+        width:60%;
     }
+}
 
-    .login-left {
-      background-color: #f5f5f5;
-    }
-
-    .login-left img {
-      width: 70%;
-      max-width: 250px;
-    }
-
-    .login-right {
-      flex-direction: column;
-    }
-
-    h2 {
-      text-align: center;
-      margin-bottom: 30px;
-      color: #333;
-    }
-
-    .form-group {
-      margin-bottom: 20px;
+@media(max-width:480px){
+    .login-left img{
+        width:50%;
     }
 
     input[type="text"],
-    input[type="password"] {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #ccc;
-      border-radius: 25px;
-      outline: none;
-      transition: border-color 0.3s ease;
-      font-size: 1rem;
+    input[type="password"],
+    button{
+        font-size:0.95rem;
+        padding:10px;
     }
-
-    input:focus {
-      border-color: #8b6f47;
-    }
-
-    .remember {
-      display: flex;
-      align-items: center;
-      margin-bottom: 15px;
-      font-size: 14px;
-    }
-
-    .remember input {
-      margin-right: 8px;
-    }
-
-    button {
-      width: 100%;
-      background-color: #8b6f47;
-      color: white;
-      border: none;
-      padding: 12px;
-      border-radius: 25px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-
-    button:hover {
-      background-color: #6d5837;
-    }
-
-    .bottom-links {
-      text-align: center;
-      margin-top: 20px;
-    }
-
-    .bottom-links a {
-      text-decoration: none;
-      color: #8b6f47;
-      font-weight: 500;
-    }
-
-    .bottom-links a:hover {
-      text-decoration: underline;
-    }
-
-    /* Error message style */
-    .error {
-      color: red;
-      text-align: center;
-      margin-bottom: 15px;
-      display: none;
-    }
-
-    /* Responsive */
-    @media(max-width:768px) {
-      .login-container { flex-direction: column; }
-      .login-left, .login-right { padding:30px; }
-      .login-left img { width: 60%; }
-    }
-
-    @media(max-width:480px) {
-      .login-left img { width: 50%; }
-      input[type="text"], input[type="password"], button { font-size: 0.95rem; padding: 10px; }
-    }
-  </style>
+}
+</style>
 </head>
+
 <body>
 
-  <div class="login-container">
-    <div class="login-left">
-      <img src="vaporia.jpg" alt="Vaporia Logo">
-    </div>
-    <div class="login-right">
-      <h2>Welcome Back!</h2>
+<div class="login-container">
 
-      <div class="error" id="error-message"></div>
+<div class="login-left">
+<img src="vaporia.jpg" alt="Vaporia Logo">
+</div>
 
-      <form id="loginForm">
-        <div class="form-group">
-          <input type="text" name="username" placeholder="Enter Username..." required>
-        </div>
-        <div class="form-group">
-          <input type="password" name="password" placeholder="Password" required>
-        </div>
-        <div class="remember">
-          <input type="checkbox" id="remember" name="remember">
-          <label for="remember">Remember Me</label>
-        </div>
-        <button type="submit">Login</button>
-      </form>
+<div class="login-right">
 
-      <div class="bottom-links">
-        <a href="register.html">Create an Account!</a>
-      </div>
-    </div>
-  </div>
+<h2>Welcome Back!</h2>
 
- <script>
-document.getElementById('loginForm').addEventListener('submit', async function(e){
-  e.preventDefault();
+<div class="error" id="error-message"></div>
 
-  const data = {
-    username: this.username.value,
-    password: this.password.value
-  };
+<form id="loginForm">
 
-  const res = await fetch('/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
+<div class="form-group">
+<input type="text" name="username" placeholder="Enter Username..." required>
+</div>
 
-  const result = await res.json();
-  if (res.ok) {
-  alert(result.message);
-  window.location.href = "dashboard.html"; // change if needed
-}
- else {
-    alert(result.message);
-  }
+<div class="form-group">
+<input type="password" name="password" placeholder="Password" required>
+</div>
+
+<div class="remember">
+<input type="checkbox" id="remember" name="remember">
+<label for="remember">Remember Me</label>
+</div>
+
+<button type="submit">Login</button>
+
+</form>
+
+<div class="bottom-links">
+<a href="register.html">Create an Account!</a>
+</div>
+
+</div>
+</div>
+
+<script>
+
+document
+.getElementById("loginForm")
+.addEventListener("submit", async function(e){
+
+e.preventDefault();
+
+const username = this.username.value.trim();
+const password = this.password.value.trim();
+const remember = document.getElementById("remember").checked;
+const errorDiv = document.getElementById("error-message");
+
+try{
+
+const res = await fetch("/login",{
+method:"POST",
+headers:{ "Content-Type":"application/json" },
+body:JSON.stringify({ username, password, remember }),
+credentials:"include"
 });
-</script>
 
+const data = await res.json();
+
+if(res.ok){
+
+localStorage.setItem("token", data.token);
+localStorage.setItem("user", data.user.username);
+
+window.location.href = "dashboard.html";
+
+}else{
+
+errorDiv.textContent = data.message;
+errorDiv.style.display = "block";
+
+}
+
+}catch(err){
+
+errorDiv.textContent = "Server error";
+errorDiv.style.display = "block";
+
+console.error(err);
+
+}
+
+});
+
+</script>
 
 </body>
 </html>
