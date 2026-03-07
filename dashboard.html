@@ -1,23 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Dashboard - Vaporia Inventory</title>
+<title>Dashboard - Vaporia Inventory System</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <style>
 body {
     margin: 0;
-    font-family: 'Segoe UI', sans-serif;
-    background-color: #d8c4ad;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #d8c4ad;
+    position: relative;
 }
-
 body::before {
     content: "";
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
     background: url('vaporia.jpg');
     background-size: 400px auto;
     background-position: center top;
@@ -25,7 +22,6 @@ body::before {
     pointer-events: none;
     z-index: 0;
 }
-
 .topbar {
     padding: 15px;
     background: rgba(193,168,142,0.9);
@@ -34,13 +30,11 @@ body::before {
     z-index: 1;
     position: relative;
 }
-
 .menu-btn {
     font-size: 26px;
     cursor: pointer;
     margin-right: 20px;
 }
-
 .sidebar {
     position: fixed;
     left: -250px;
@@ -52,7 +46,6 @@ body::before {
     transition: 0.3s;
     z-index: 9999;
 }
-
 .sidebar a {
     display: block;
     padding: 15px;
@@ -60,29 +53,22 @@ body::before {
     color: #4b3a2a;
     font-size: 18px;
 }
-
 .sidebar a:hover {
     background: rgba(143,123,101,0.9);
     color: white;
 }
-
-.sidebar.active {
-    left: 0;
-}
-
+.sidebar.active { left: 0; }
 .main {
     padding: 30px;
     position: relative;
     z-index: 1;
 }
-
 .dashboard {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 20px;
     margin-top: 20px;
 }
-
 .card {
     background: rgba(200,180,150,0.95);
     padding: 30px;
@@ -90,21 +76,16 @@ body::before {
     text-align: center;
     color: #4b3a2a;
     box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    transition: transform 0.2s, box-shadow 0.2s;
 }
-
-.card h3 {
-    margin-bottom: 10px;
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.3);
 }
-
-.card p {
-    font-size: 35px;
-    margin: 0;
-}
-
-@media (max-width:768px) {
-    .dashboard {
-        grid-template-columns: repeat(auto-fit, minmax(180px,1fr));
-    }
+.card h3 { margin-bottom: 10px; }
+.card p { font-size: 35px; margin: 0; }
+@media(max-width:768px) {
+    .dashboard { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
 }
 </style>
 </head>
@@ -112,125 +93,63 @@ body::before {
 <body>
 
 <div class="topbar">
-<div class="menu-btn">☰</div>
-<h2>Dashboard</h2>
+    <div class="menu-btn">☰</div>
+    <h2>Dashboard</h2>
 </div>
 
 <div class="sidebar" id="sidebar">
-<a href="dashboard.html">Dashboard</a>
-<a href="items.html">Items</a>
-<a href="#">Sales</a>
-<a href="#">Reports</a>
-<a href="#" id="logoutBtn">Logout</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="items.html">Items</a>
+    <a href="#">Sales</a>
+    <a href="#">Reports</a>
+    <a href="#" id="logoutBtn">Logout</a>
 </div>
 
 <div class="main">
-<div class="dashboard">
-
-<div class="card">
-<h3>Total Items</h3>
-<p id="totalItems">0</p>
-</div>
-
-<div class="card">
-<h3>Available Items</h3>
-<p id="availableItems">0</p>
-</div>
-
-<div class="card">
-<h3>Out of Stock</h3>
-<p id="outOfStock">0</p>
-</div>
-
-<div class="card">
-<h3>Total Sales</h3>
-<p id="totalSales">0</p>
-</div>
-
-<div class="card">
-<h3>Total Revenue</h3>
-<p id="totalRevenue">0</p>
-</div>
-
-</div>
+    <div class="dashboard">
+        <div class="card"><h3>Total Items</h3><p id="totalItems">0</p></div>
+        <div class="card"><h3>Available Items</h3><p id="availableItems">0</p></div>
+        <div class="card"><h3>Out of Stock</h3><p id="outOfStock">0</p></div>
+        <div class="card"><h3>Total Sales</h3><p id="totalSales">0</p></div>
+        <div class="card"><h3>Total Revenue</h3><p id="totalRevenue">0</p></div>
+    </div>
 </div>
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-
     const menuBtn = document.querySelector(".menu-btn");
     const sidebar = document.getElementById("sidebar");
     const logoutBtn = document.getElementById("logoutBtn");
     const sidebarLinks = document.querySelectorAll(".sidebar a");
 
-    menuBtn.addEventListener("click", e => {
-        e.stopPropagation();
-        sidebar.classList.toggle("active");
-    });
-
-    document.addEventListener("click", e => {
-        if (!sidebar.contains(e.target) && !menuBtn.contains(e.target)) {
-            sidebar.classList.remove("active");
-        }
-    });
-
-    sidebarLinks.forEach(link => {
-        link.addEventListener("click", e => {
-            e.stopPropagation();
-        });
-    });
+    menuBtn.addEventListener("click", e => { e.stopPropagation(); sidebar.classList.toggle("active"); });
+    document.addEventListener("click", e => { if(!sidebar.contains(e.target) && !menuBtn.contains(e.target)) sidebar.classList.remove("active"); });
+    sidebarLinks.forEach(link => link.addEventListener("click", e => e.stopPropagation()));
 
     logoutBtn.addEventListener("click", async e => {
-
         e.preventDefault();
         e.stopPropagation();
-
-        try {
-            await fetch("/api/logout", {
-                method: "POST",
-                credentials: "include"
-            });
-        } catch (err) {
-            console.warn(err);
-        }
-
+        try { await fetch("/api/logout", { method:"POST", credentials:"include" }); } catch(err){ console.warn(err); }
         localStorage.removeItem("token");
         localStorage.removeItem("user");
-
         window.location.replace("login.html");
-
     });
 
-    async function loadDashboard() {
-
+    async function loadDashboard(){
         try {
-
-            const res = await fetch("/api/dashboard", {
-                credentials: "include"
-            });
-
-            if (res.status === 401) {
-                window.location.replace("login.html");
-                return;
-            }
-
+            const res = await fetch("/api/dashboard", { credentials:"include" });
+            if(res.status === 401){ window.location.replace("login.html"); return; }
             const data = await res.json();
-
             document.getElementById("totalItems").innerText = data.totalItems;
             document.getElementById("availableItems").innerText = data.availableItems;
             document.getElementById("outOfStock").innerText = data.outOfStock;
             document.getElementById("totalSales").innerText = data.totalSales;
             document.getElementById("totalRevenue").innerText = data.totalRevenue;
-
-        } catch (err) {
-            console.error(err);
-        }
-
+        } catch(err){ console.error(err); }
     }
 
     loadDashboard();
     setInterval(loadDashboard, 5000);
-
 });
 </script>
 

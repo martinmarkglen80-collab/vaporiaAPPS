@@ -1,15 +1,15 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const path = require("path");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
+const path = require("path");
 require("dotenv").config();
 
 const app = express();
 
 app.use(cors({
-    origin: "http://localhost:3000",
+    origin: true,
     credentials: true
 }));
 
@@ -20,7 +20,7 @@ app.use(express.static(__dirname));
 
 mongoose.connect(process.env.MONGO_URI)
 .then(() => console.log("✅ MongoDB Connected"))
-.catch((err) => console.log("❌ MongoDB Error:", err));
+.catch(err => console.log("❌ MongoDB Error:", err));
 
 const userSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
@@ -28,29 +28,44 @@ const userSchema = new mongoose.Schema({
     password: { type: String, required: true }
 });
 
+const itemSchema = new mongoose.Schema({
+    name: String,
+    stock: Number,
+    price: Number
+});
+
+const saleSchema = new mongoose.Schema({
+    item: { type: mongoose.Schema.Types.ObjectId, ref: "Item" },
+    quantity: Number,
+    totalPrice: Number,
+    date: { type: Date, default: Date.now }
+});
+
 const User = mongoose.model("User", userSchema);
+const Item = mongoose.model("Item", itemSchema);
+const Sale = mongoose.model("Sale", saleSchema);
 
-const JWT_SECRET = process.env.JWT_SECRET || "secret123";
+const authenticate = (req, res, next) => {
 
-function authMiddleware(req, res, next) {
-
-    const token =
-        req.cookies.token ||
-        req.headers.authorization?.split(" ")[1];
+    const token = req.cookies.token || "";
 
     if (!token) {
         return res.status(401).json({ message: "Unauthorized" });
     }
 
     try {
-        const decoded = jwt.verify(token, JWT_SECRET);
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.user = decoded;
         next();
+
     } catch (err) {
+
         return res.status(401).json({ message: "Invalid token" });
+
     }
 
-}
+};
 
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "index.html"));
@@ -82,9 +97,9 @@ app.post("/register", async (req, res) => {
 
         res.json({ message: "Account created successfully!" });
 
-    } catch (error) {
+    } catch (err) {
 
-        console.error(error);
+        console.error(err);
         res.status(500).json({ message: "Server error" });
 
     }
@@ -110,24 +125,23 @@ app.post("/login", async (req, res) => {
 
         const token = jwt.sign(
             { id: user._id, username: user.username },
-            JWT_SECRET,
-            { expiresIn: "1h" }
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
         );
 
         res.cookie("token", token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "Strict",
-            path: "/"
+            maxAge: 7 * 24 * 60 * 60 * 1000
         });
 
         res.json({
             message: "Login successful!",
-            user: { username: user.username },
-            token
+            user: { username: user.username }
         });
 
-    } catch (error) {
+    } catch (err) {
 
         res.status(500).json({ message: "Server error" });
 
@@ -135,35 +149,53 @@ app.post("/login", async (req, res) => {
 
 });
 
-app.get("/api/dashboard", authMiddleware, (req, res) => {
+app.post("/api/logout", (req, res) => {
 
-    res.json({
-        totalItems: 120,
-        availableItems: 95,
-        outOfStock: 25,
-        totalSales: 78,
-        totalRevenue: 12500
-    });
+    res.clearCookie("token");
+
+    res.json({ message: "Logged out" });
 
 });
 
-app.post("/api/logout", (req, res) => {
+app.get("/api/dashboard", authenticate, async (req, res) => {
 
     try {
 
-        res.clearCookie("token", {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "Strict",
-            path: "/"
+        const totalItems = await Item.countDocuments();
+
+        const availableItems = await Item.countDocuments({
+            stock: { $gt: 0 }
         });
 
-        res.json({ message: "Logged out successfully" });
+        const outOfStock = await Item.countDocuments({
+            stock: 0
+        });
+
+        const totalSales = await Sale.countDocuments();
+
+        const totalRevenueAgg = await Sale.aggregate([
+            {
+                $group: {
+                    _id: null,
+                    total: { $sum: "$totalPrice" }
+                }
+            }
+        ]);
+
+        const totalRevenue = totalRevenueAgg[0]?.total || 0;
+
+        res.json({
+            totalItems,
+            availableItems,
+            outOfStock,
+            totalSales,
+            totalRevenue
+        });
 
     } catch (err) {
 
         console.error(err);
-        res.status(500).json({ message: "Logout failed" });
+        res.status(500).json({ message: "Server error" });
 
     }
 
@@ -171,6 +203,6 @@ app.post("/api/logout", (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () =>
-    console.log(`🔥 Server running on port ${PORT}`)
-);
+app.listen(PORT, () => {
+    console.log(`🔥 Server running on port ${PORT}`);
+});
