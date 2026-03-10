@@ -180,27 +180,47 @@ app.post("/logout", (req, res) => {
 
 
 // ===== DASHBOARD =====
-app.get("/api/dashboard", (req, res) => {
-  const token = req.cookies.token;
+// ===== DASHBOARD (REAL DATA) =====
+app.get("/api/dashboard", async (req, res) => {
 
-  if (!token) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
+    const token = req.cookies.token;
 
-  try {
-    jwt.verify(token, process.env.JWT_SECRET);
+    if (!token) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
 
-    // Dummy dashboard data
-    res.json({
-      totalItems: 120,
-      availableItems: 90,
-      outOfStock: 30,
-      totalSales: 50,
-      totalRevenue: 1500,
-    });
-  } catch {
-    res.status(401).json({ message: "Invalid token" });
-  }
+    try {
+
+        jwt.verify(token, process.env.JWT_SECRET);
+
+        const totalItems = await Item.countDocuments();
+
+        const availableItems = await Item.countDocuments({
+            stock: { $gt: 0 }
+        });
+
+        const outOfStock = await Item.countDocuments({
+            stock: 0
+        });
+
+        // Optional sales values (temporary until sales system exists)
+        const totalSales = 0;
+        const totalRevenue = 0;
+
+        res.json({
+            totalItems,
+            availableItems,
+            outOfStock,
+            totalSales,
+            totalRevenue
+        });
+
+    } catch (err) {
+
+        res.status(401).json({ message: "Invalid token" });
+
+    }
+
 });
 
 
