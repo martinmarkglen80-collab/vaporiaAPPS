@@ -6,407 +6,389 @@
 <title>Items - Vaporia Inventory System</title>
 
 <style>
-
-/* =========================
-   BODY & BACKGROUND
-========================= */
-body {
-    margin: 0;
-    font-family: 'Segoe UI', sans-serif;
-    background: #d8c4ad;
-    position: relative;
+body{
+margin:0;
+font-family:'Segoe UI',sans-serif;
+background:#d8c4ad;
+position:relative;
 }
 
-body::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: url('vaporia.jpg');
-    background-size: 400px auto;
-    background-position: center top;
-    opacity: 0.24;
-    pointer-events: none;
-    z-index: 0;
+/* Background image */
+body::before{
+content:"";
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:url('vaporia.jpg');
+background-size:400px auto;
+background-position:center top;
+opacity:0.24;
+pointer-events:none;
+z-index:0;
 }
 
-/* =========================
-   TOPBAR
-========================= */
-.topbar {
-    padding: 15px;
-    background: rgba(193,168,142,0.9);
-    display: flex;
-    align-items: center;
-    position: relative;
-    z-index: 1;
+/* Topbar */
+.topbar{
+padding:15px;
+background:rgba(193,168,142,0.9);
+display:flex;
+align-items:center;
+z-index:1;
+position:relative;
 }
 
-.menu-btn {
-    font-size: 26px;
-    cursor: pointer;
-    margin-right: 20px;
+.menu-btn{
+font-size:26px;
+cursor:pointer;
+margin-right:20px;
 }
 
-/* =========================
-   SIDEBAR
-========================= */
-.sidebar {
-    position: fixed;
-    left: -250px;
-    top: 0;
-    width: 250px;
-    height: 100%;
-    background: rgba(168,146,120,0.95);
-    padding-top: 60px;
-    transition: 0.3s;
-    z-index: 9999;
+/* Sidebar */
+.sidebar{
+position:fixed;
+left:-250px;
+top:0;
+width:250px;
+height:100%;
+background:rgba(168,146,120,0.95);
+padding-top:60px;
+transition:0.3s;
+z-index:9999;
 }
 
-.sidebar a {
-    display: block;
-    padding: 15px;
-    text-decoration: none;
-    color: #4b3a2a;
-    font-size: 18px;
+.sidebar a{
+display:block;
+padding:15px;
+text-decoration:none;
+color:#4b3a2a;
+font-size:18px;
 }
 
-.sidebar a:hover {
-    background: rgba(143,123,101,0.9);
-    color: white;
+.sidebar a:hover{
+background:rgba(143,123,101,0.9);
+color:white;
 }
 
-.sidebar.active {
-    left: 0;
+.sidebar.active{
+left:0;
 }
 
-/* =========================
-   MAIN CONTENT
-========================= */
-.main {
-    padding: 30px;
-    position: relative;
-    z-index: 1;
+/* Main */
+.main{
+padding:30px;
+z-index:1;
+position:relative;
 }
 
-/* =========================
-   ADD ITEM SECTION
-========================= */
-.add-section {
-    background: rgba(200,180,150,0.95);
-    padding: 20px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px;
+/* Add item */
+.add-section{
+background:rgba(200,180,150,0.95);
+padding:20px;
+border-radius:12px;
+margin-bottom:20px;
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+align-items:center;
 }
 
-.add-section input[type="text"],
-.add-section input[type="number"] {
-    padding: 8px;
-    border-radius: 5px;
-    border: 1px solid #a88a78;
+.add-section input{
+padding:8px;
+border-radius:5px;
+border:1px solid #a88a78;
 }
 
-.add-section input[type="file"] {
-    padding: 5px;
+.add-section button{
+padding:8px 15px;
+background:#4b3a2a;
+color:white;
+border:none;
+border-radius:5px;
+cursor:pointer;
 }
 
-.add-section button {
-    padding: 8px 15px;
-    background: #4b3a2a;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+.add-section button:hover{
+background:#2e1f13;
 }
 
-.add-section button:hover {
-    background: #2e1f13;
+.camera-btn{
+padding:8px 12px;
+background:#4b3a2a;
+color:white;
+border-radius:5px;
+cursor:pointer;
 }
 
-/* =========================
-   CAROUSEL
-========================= */
-.carousel-container {
-    position: relative;
-    background: rgba(200,180,150,0.95);
-    padding: 20px;
-    border-radius: 12px;
+/* Search */
+.search-container{
+display:flex;
+align-items:center;
+margin-bottom:15px;
 }
 
-.carousel-grid {
-    display: flex;
-    overflow-x: auto;
-    scroll-behavior: smooth;
-    gap: 20px;
-    padding-bottom: 10px;
+.search-container input{
+flex:1;
+padding:8px;
+border-radius:5px;
+border:1px solid #a88a78;
 }
 
-.item-card {
-    min-width: 200px;
-    flex: 0 0 auto;
-    background: rgba(200,180,150,0.95);
-    padding: 15px;
-    border-radius: 12px;
-    text-align: center;
-    color: #4b3a2a;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-    transition: transform 0.2s, box-shadow 0.2s;
+.search-container button{
+padding:8px 12px;
+background:#4b3a2a;
+color:white;
+border:none;
+border-radius:5px;
+margin-left:5px;
+cursor:pointer;
 }
 
-.item-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+/* Items */
+.items-grid{
+display:flex;
+overflow-x:auto;
+gap:20px;
+padding-bottom:10px;
 }
 
-.item-card img {
-    width: 100%;
-    height: 150px;
-    object-fit: cover;
-    border-radius: 8px;
-    margin-bottom: 10px;
+.item-card{
+min-width:200px;
+flex:0 0 auto;
+background:rgba(200,180,150,0.95);
+padding:15px;
+border-radius:12px;
+text-align:center;
+color:#4b3a2a;
+box-shadow:0 4px 12px rgba(0,0,0,0.25);
 }
 
-/* =========================
-   CAROUSEL ARROWS
-========================= */
-.arrow {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 30px;
-    color: #4b3a2a;
-    background: rgba(200,180,150,0.8);
-    padding: 5px 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    user-select: none;
-    z-index: 2;
+.item-card img{
+width:100%;
+height:150px;
+object-fit:cover;
+border-radius:8px;
+margin-bottom:10px;
 }
 
-.arrow-left { left: 0; }
-.arrow-right { right: 0; }
-
-/* =========================
-   NOT AVAILABLE SECTION
-========================= */
-.not-available {
-    margin-top: 30px;
+.not-available{
+margin-top:30px;
 }
-
-.not-available h3 {
-    margin-bottom: 10px;
-}
-
-/* =========================
-   RESPONSIVE
-========================= */
-@media (max-width: 768px) {
-    .carousel-grid { gap: 15px; }
-    .item-card { min-width: 150px; }
-}
-
 </style>
 </head>
 
 <body>
 
-<!-- =========================
-     TOPBAR
-========================= -->
+<!-- Topbar -->
 <div class="topbar">
-    <div class="menu-btn">☰</div>
-    <h2>Items</h2>
+<div class="menu-btn">☰</div>
+<h2>Items</h2>
 </div>
 
-<!-- =========================
-     SIDEBAR
-========================= -->
+<!-- Sidebar -->
 <div class="sidebar" id="sidebar">
-    <a href="dashboard.html">Dashboard</a>
-    <a href="item.html">Items</a>
-    <a href="#">Sales</a>
-    <a href="#">Reports</a>
-    <a href="#" id="logoutBtn">Logout</a>
+<a href="dashboard.html">Dashboard</a>
+<a href="item.html">Items</a>
+<a href="#">Sales</a>
+<a href="#">Reports</a>
+<a href="#" id="logoutBtn">Logout</a>
 </div>
 
-<!-- =========================
-     MAIN CONTENT
-========================= -->
 <div class="main">
 
-    <!-- ADD ITEM -->
-    <div class="add-section">
-        <input type="text" id="name" placeholder="Item Name">
-        <input type="number" id="stock" placeholder="Stock">
-        <input type="file" id="image">
-        <button onclick="addItem()">Add Item</button>
-    </div>
+<!-- Add Item -->
+<div class="add-section">
 
-    <!-- ITEMS CAROUSEL -->
-    <div class="carousel-container">
-        <div class="arrow arrow-left" onclick="scrollLeft()">&#8592;</div>
-        <div class="arrow arrow-right" onclick="scrollRight()">&#8594;</div>
-        <div class="carousel-grid" id="itemsGrid"></div>
-    </div>
+<input type="text" id="name" placeholder="Item Name">
 
-    <!-- NOT AVAILABLE -->
-    <div class="not-available">
-        <h3>NOT AVAIL</h3>
-        <div class="carousel-grid" id="outOfStockGrid"></div>
-    </div>
+<input type="text" id="description" placeholder="Description">
+
+<input type="number" id="stock" placeholder="Stock">
+
+<input type="file" accept="image/*" capture="environment" id="imageInput" style="display:none;">
+
+<button class="camera-btn" onclick="document.getElementById('imageInput').click()">📷 Scan / Upload</button>
+
+<button onclick="addItem()">Add Item</button>
+
+</div>
+
+<!-- Search -->
+<div class="search-container">
+
+<input type="text" id="searchInput" placeholder="Search items..." oninput="filterItems()">
+
+<button>🔍</button>
+
+</div>
+
+<h3>Available Items</h3>
+<div class="items-grid" id="itemsGrid"></div>
+
+<div class="not-available">
+
+<h3>NOT AVAIL</h3>
+
+<div class="items-grid" id="outOfStockGrid"></div>
+
+</div>
 
 </div>
 
 <script>
 
-document.addEventListener("DOMContentLoaded", () => {
+let allItems=[];
 
-    const menuBtn = document.querySelector(".menu-btn");
-    const sidebar = document.getElementById("sidebar");
-    const logoutBtn = document.getElementById("logoutBtn");
+const sidebar=document.getElementById("sidebar");
+const menuBtn=document.querySelector(".menu-btn");
 
-    const itemsGrid = document.getElementById("itemsGrid");
-    const outOfStockGrid = document.getElementById("outOfStockGrid");
+menuBtn.addEventListener("click",e=>{
+e.stopPropagation();
+sidebar.classList.toggle("active");
+});
 
-    /* =========================
-       SIDEBAR TOGGLE
-    ========================= */
-    menuBtn.addEventListener("click", e => {
-        e.stopPropagation();
-        sidebar.classList.toggle("active");
-    });
+document.addEventListener("click",e=>{
+if(!sidebar.contains(e.target)&&!menuBtn.contains(e.target)){
+sidebar.classList.remove("active");
+}
+});
 
-    document.addEventListener("click", e => {
-        if (!sidebar.contains(e.target) && !menuBtn.contains(e.target)) {
-            sidebar.classList.remove("active");
-        }
-    });
+/* LOGOUT */
 
-    /* =========================
-       LOGOUT
-    ========================= */
-    logoutBtn.addEventListener("click", async e => {
-        e.preventDefault();
-        e.stopPropagation();
+document.getElementById("logoutBtn").addEventListener("click",async e=>{
 
-        try {
-            await fetch("/logout", {
-                method: "POST",
-                credentials: "include"
-            });
-        } catch (err) {
-            console.warn(err);
-        }
+e.preventDefault();
 
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
+await fetch("/logout",{method:"POST",credentials:"include"});
 
-        window.location.replace("login.html");
-    });
+localStorage.removeItem("token");
+localStorage.removeItem("user");
 
-    /* =========================
-       LOAD ITEMS
-    ========================= */
-    async function loadItems() {
-
-        try {
-            const res = await fetch("/api/items", {
-                credentials: "include"
-            });
-
-            if (res.status === 401) {
-                window.location.replace("login.html");
-                return;
-            }
-
-            const items = await res.json();
-
-            itemsGrid.innerHTML = "";
-            outOfStockGrid.innerHTML = "";
-
-            items.forEach(item => {
-
-                const card = `
-                <div class="item-card">
-                    <img src="${item.image}" onerror="this.src='https://via.placeholder.com/200'">
-                    <h4>${item.name}</h4>
-                    <p>Stock: ${item.stock}</p>
-                </div>
-                `;
-
-                if (item.stock > 0) {
-                    itemsGrid.innerHTML += card;
-                } else {
-                    outOfStockGrid.innerHTML += card;
-                }
-
-            });
-
-        } catch (err) {
-            console.error(err);
-        }
-    }
-
-    /* =========================
-       ADD ITEM
-    ========================= */
-    async function addItem() {
-
-        const name = document.getElementById("name").value;
-        const stock = document.getElementById("stock").value;
-        const image = document.getElementById("image").files[0];
-
-        const formData = new FormData();
-
-        formData.append("name", name);
-        formData.append("stock", stock);
-        formData.append("image", image);
-
-        try {
-
-            const res = await fetch("/api/items", {
-                method: "POST",
-                body: formData
-            });
-
-            const data = await res.json();
-
-            alert(data.message);
-
-            loadItems();
-
-        } catch (err) {
-            console.error(err);
-        }
-    }
-
-    /* =========================
-       CAROUSEL SCROLL
-    ========================= */
-    function scrollLeft() {
-        itemsGrid.scrollBy({
-            left: -250,
-            behavior: "smooth"
-        });
-    }
-
-    function scrollRight() {
-        itemsGrid.scrollBy({
-            left: 250,
-            behavior: "smooth"
-        });
-    }
-
-    /* INITIAL LOAD */
-    loadItems();
+window.location="login.html";
 
 });
+
+/* LOAD ITEMS */
+
+async function loadItems(){
+
+try{
+
+const res=await fetch("/api/items",{credentials:"include"});
+
+if(res.status===401){
+window.location="login.html";
+return;
+}
+
+allItems=await res.json();
+
+renderItems(allItems);
+
+}catch(err){
+console.error(err);
+}
+
+}
+
+/* RENDER ITEMS */
+
+function renderItems(items){
+
+const itemsGrid=document.getElementById("itemsGrid");
+const outGrid=document.getElementById("outOfStockGrid");
+
+itemsGrid.innerHTML="";
+outGrid.innerHTML="";
+
+items.forEach(item=>{
+
+const card=`
+<div class="item-card">
+
+<img src="${item.image || ''}" onerror="this.src='https://via.placeholder.com/200'">
+
+<h4>${item.name}</h4>
+
+<p>${item.description || ''}</p>
+
+<p>Stock: ${item.stock}</p>
+
+</div>
+`;
+
+if(item.stock>0){
+itemsGrid.innerHTML+=card;
+}else{
+outGrid.innerHTML+=card;
+}
+
+});
+
+}
+
+/* ADD ITEM */
+
+async function addItem(){
+
+const name=document.getElementById("name").value;
+const description=document.getElementById("description").value;
+const stock=document.getElementById("stock").value;
+const image=document.getElementById("imageInput").files[0];
+
+if(!name||!stock){
+alert("Name and stock required");
+return;
+}
+
+const formData=new FormData();
+
+formData.append("name",name);
+formData.append("description",description);
+formData.append("stock",stock);
+
+if(image){
+formData.append("image",image);
+}
+
+const res=await fetch("/api/items",{
+method:"POST",
+body:formData,
+credentials:"include"
+});
+
+const data=await res.json();
+
+alert(data.message);
+
+document.getElementById("name").value="";
+document.getElementById("description").value="";
+document.getElementById("stock").value="";
+document.getElementById("imageInput").value="";
+
+loadItems();
+
+}
+
+/* SEARCH */
+
+function filterItems(){
+
+const term=document.getElementById("searchInput").value.toLowerCase();
+
+const filtered=allItems.filter(item=>
+item.name.toLowerCase().includes(term)||
+(item.description && item.description.toLowerCase().includes(term))
+);
+
+renderItems(filtered);
+
+}
+
+/* START */
+
+loadItems();
 
 </script>
 
