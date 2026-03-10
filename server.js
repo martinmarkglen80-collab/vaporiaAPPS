@@ -19,7 +19,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(__dirname));
-app.use('/uploads', express.static('uploads')); // serve images
+app.use("/uploads", express.static("uploads")); // serve uploaded images
 
 /* =========================
    MongoDB Connection
@@ -29,16 +29,16 @@ mongoose.connect(process.env.MONGO_URI)
     .catch(err => console.log("❌ MongoDB Error:", err));
 
 /* =========================
-   Multer Config for Image Uploads
+   Multer Config for Images
 ========================= */
 const storage = multer.diskStorage({
-    destination: function(req, file, cb){
-        const dir = './uploads';
-        if(!fs.existsSync(dir)) fs.mkdirSync(dir);
+    destination: function (req, file, cb) {
+        const dir = "./uploads";
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir);
         cb(null, dir);
     },
-    filename: function(req, file, cb){
-        cb(null, Date.now() + '-' + file.originalname);
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + "-" + file.originalname);
     }
 });
 const upload = multer({ storage });
@@ -64,25 +64,23 @@ const Item = mongoose.model("Item", itemSchema);
 /* =========================
    Routes
 ========================= */
-// Serve login page
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "login.html")));
 
 /* ===== REGISTER ===== */
 app.post("/register", async (req, res) => {
     try {
         const { username, email, password } = req.body;
-        if(!username || !email || !password)
+        if (!username || !email || !password)
             return res.status(400).json({ message: "All fields required" });
 
         const existing = await User.findOne({ $or: [{ username }, { email }] });
-        if(existing)
+        if (existing)
             return res.status(400).json({ message: "Username or Email exists" });
 
         const hashed = await bcrypt.hash(password, 10);
         await new User({ username, email, password: hashed }).save();
-
         res.json({ message: "Account created successfully!" });
-    } catch(err) {
+    } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Server error" });
     }
@@ -92,35 +90,28 @@ app.post("/register", async (req, res) => {
 app.post("/login", async (req, res) => {
     try {
         const { username, password } = req.body;
-        if(!username || !password)
+        if (!username || !password)
             return res.status(400).json({ message: "Username and password required" });
 
         const user = await User.findOne({ username });
-        if(!user)
-            return res.status(401).json({ message: "Invalid credentials" });
+        if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
         const isMatch = await bcrypt.compare(password, user.password);
-        if(!isMatch)
-            return res.status(401).json({ message: "Invalid credentials" });
+        if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
 
-        if(!process.env.JWT_SECRET)
+        if (!process.env.JWT_SECRET)
             return res.status(500).json({ message: "JWT secret not set" });
 
-        const token = jwt.sign(
-            { id: user._id, username: user.username },
-            process.env.JWT_SECRET,
-            { expiresIn: "7d" }
-        );
-
+        const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, { expiresIn: "7d" });
         res.cookie("token", token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "Strict",
-            maxAge: 7*24*60*60*1000
+            maxAge: 7 * 24 * 60 * 60 * 1000
         });
 
         res.json({ message: "Login successful!", user: { username: user.username } });
-    } catch(err) {
+    } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Server error" });
     }
@@ -135,7 +126,7 @@ app.post("/logout", (req, res) => {
 /* ===== DASHBOARD ===== */
 app.get("/api/dashboard", (req, res) => {
     const token = req.cookies.token;
-    if(!token) return res.status(401).json({ message: "Unauthorized" });
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
 
     try {
         jwt.verify(token, process.env.JWT_SECRET);
@@ -155,7 +146,7 @@ app.get("/api/dashboard", (req, res) => {
 // Get all items
 app.get("/api/items", async (req, res) => {
     const token = req.cookies.token;
-    if(!token) return res.status(401).json({ message: "Unauthorized" });
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
 
     try {
         jwt.verify(token, process.env.JWT_SECRET);
@@ -167,32 +158,31 @@ app.get("/api/items", async (req, res) => {
 });
 
 // Add item
-app.post("/api/items", upload.single('image'), async (req, res) => {
+app.post("/api/items", upload.single("image"), async (req, res) => {
     try {
         const { name, description, stock } = req.body;
-        if(!name || !stock) return res.status(400).json({ message: "Name and stock required" });
+        if (!name || !stock) return res.status(400).json({ message: "Name and stock required" });
 
-        let imagePath = req.file ? '/uploads/' + req.file.filename : '';
+        const imagePath = req.file ? "/uploads/" + req.file.filename : "";
         const newItem = new Item({ name, description, stock, image: imagePath });
         await newItem.save();
-
         res.json({ message: "Item added successfully!" });
-    } catch(err) {
+    } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Server error" });
     }
 });
 
 // Edit item
-app.put("/api/items/:id", upload.single('image'), async (req, res) => {
+app.put("/api/items/:id", upload.single("image"), async (req, res) => {
     try {
         const { name, description, stock } = req.body;
         const update = { name, description, stock };
-        if(req.file) update.image = '/uploads/' + req.file.filename;
+        if (req.file) update.image = "/uploads/" + req.file.filename;
 
         await Item.findByIdAndUpdate(req.params.id, update);
         res.json({ message: "Item updated successfully!" });
-    } catch(err) {
+    } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Server error" });
     }
@@ -203,7 +193,7 @@ app.delete("/api/items/:id", async (req, res) => {
     try {
         await Item.findByIdAndDelete(req.params.id);
         res.json({ message: "Item deleted successfully!" });
-    } catch(err) {
+    } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Server error" });
     }
