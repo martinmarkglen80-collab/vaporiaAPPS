@@ -6,6 +6,7 @@
 <title>Items - Vaporia Inventory System</title>
 
 <style>
+
 body{
 margin:0;
 font-family:'Segoe UI',sans-serif;
@@ -13,7 +14,7 @@ background:#d8c4ad;
 position:relative;
 }
 
-/* Background image */
+/* background */
 body::before{
 content:"";
 position:fixed;
@@ -29,7 +30,7 @@ pointer-events:none;
 z-index:0;
 }
 
-/* Topbar */
+/* topbar */
 .topbar{
 padding:15px;
 background:rgba(193,168,142,0.9);
@@ -45,7 +46,7 @@ cursor:pointer;
 margin-right:20px;
 }
 
-/* Sidebar */
+/* sidebar */
 .sidebar{
 position:fixed;
 left:-250px;
@@ -75,14 +76,14 @@ color:white;
 left:0;
 }
 
-/* Main */
+/* main */
 .main{
 padding:30px;
-z-index:1;
 position:relative;
+z-index:1;
 }
 
-/* Add item */
+/* add section */
 .add-section{
 background:rgba(200,180,150,0.95);
 padding:20px;
@@ -121,7 +122,7 @@ border-radius:5px;
 cursor:pointer;
 }
 
-/* Search */
+/* search */
 .search-container{
 display:flex;
 align-items:center;
@@ -145,7 +146,7 @@ margin-left:5px;
 cursor:pointer;
 }
 
-/* Items */
+/* items */
 .items-grid{
 display:flex;
 overflow-x:auto;
@@ -175,18 +176,19 @@ margin-bottom:10px;
 .not-available{
 margin-top:30px;
 }
+
 </style>
 </head>
 
 <body>
 
-<!-- Topbar -->
+<!-- TOPBAR -->
 <div class="topbar">
 <div class="menu-btn">☰</div>
 <h2>Items</h2>
 </div>
 
-<!-- Sidebar -->
+<!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
 <a href="dashboard.html">Dashboard</a>
 <a href="item.html">Items</a>
@@ -195,9 +197,10 @@ margin-top:30px;
 <a href="#" id="logoutBtn">Logout</a>
 </div>
 
+<!-- MAIN -->
 <div class="main">
 
-<!-- Add Item -->
+<!-- ADD ITEM -->
 <div class="add-section">
 
 <input type="text" id="name" placeholder="Item Name">
@@ -214,7 +217,7 @@ margin-top:30px;
 
 </div>
 
-<!-- Search -->
+<!-- SEARCH -->
 <div class="search-container">
 
 <input type="text" id="searchInput" placeholder="Search items..." oninput="filterItems()">
@@ -239,6 +242,8 @@ margin-top:30px;
 <script>
 
 let allItems=[];
+
+/* SIDEBAR */
 
 const sidebar=document.getElementById("sidebar");
 const menuBtn=document.querySelector(".menu-btn");
