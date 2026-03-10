@@ -124,20 +124,37 @@ app.post("/logout", (req, res) => {
 });
 
 /* ===== DASHBOARD ===== */
-app.get("/api/dashboard", (req, res) => {
+app.get("/api/dashboard", async (req, res) => {
     const token = req.cookies.token;
     if (!token) return res.status(401).json({ message: "Unauthorized" });
 
     try {
         jwt.verify(token, process.env.JWT_SECRET);
+
+        // Total items count
+        const totalItems = await Item.countDocuments();
+
+        // Available items (stock > 0)
+        const availableItems = await Item.countDocuments({ stock: { $gt: 0 } });
+
+        // Out of stock items
+        const outOfStock = await Item.countDocuments({ stock: { $lte: 0 } });
+
+        // Optional: sum up total stock or revenue if you have a sales model
+        // For now we can sum stock as example
+        const items = await Item.find();
+        let totalStock = 0;
+        items.forEach(item => totalStock += item.stock);
+
         res.json({
-            totalItems: 120,
-            availableItems: 90,
-            outOfStock: 30,
-            totalSales: 50,
-            totalRevenue: 1500
+            totalItems,
+            availableItems,
+            outOfStock,
+            totalStock
         });
-    } catch {
+
+    } catch (err) {
+        console.error(err);
         res.status(401).json({ message: "Invalid token" });
     }
 });
