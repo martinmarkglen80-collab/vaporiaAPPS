@@ -4,398 +4,293 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Items - Vaporia Inventory System</title>
-
 <style>
-
-body{
-margin:0;
-font-family:'Segoe UI',sans-serif;
-background:#d8c4ad;
-position:relative;
+/* ===== Body ===== */
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: #d8c4ad;
+    position: relative;
 }
 
-/* background */
-body::before{
-content:"";
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:url('vaporia.jpg');
-background-size:400px auto;
-background-position:center top;
-opacity:0.24;
-pointer-events:none;
-z-index:0;
+/* ===== Item Cards ===== */
+.items-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
-/* topbar */
-.topbar{
-padding:15px;
-background:rgba(193,168,142,0.9);
-display:flex;
-align-items:center;
-z-index:1;
-position:relative;
+.item-card {
+    background: white;
+    border-radius: 8px;
+    padding: 10px;
+    width: 200px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-.menu-btn{
-font-size:26px;
-cursor:pointer;
-margin-right:20px;
+.item-card img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 5px;
 }
 
-/* sidebar */
-.sidebar{
-position:fixed;
-left:-250px;
-top:0;
-width:250px;
-height:100%;
-background:rgba(168,146,120,0.95);
-padding-top:60px;
-transition:0.3s;
-z-index:9999;
+/* ===== Edit/Delete Buttons ===== */
+.item-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 8px;
 }
 
-.sidebar a{
-display:block;
-padding:15px;
-text-decoration:none;
-color:#4b3a2a;
-font-size:18px;
+.item-actions button {
+    padding: 4px 8px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    color: white;
 }
 
-.sidebar a:hover{
-background:rgba(143,123,101,0.9);
-color:white;
+.edit-btn {
+    background: #2e86de;
 }
 
-.sidebar.active{
-left:0;
+.edit-btn:hover {
+    background: #1b4f72;
 }
 
-/* main */
-.main{
-padding:30px;
-position:relative;
-z-index:1;
+.delete-btn {
+    background: #c0392b;
 }
 
-/* add section */
-.add-section{
-background:rgba(200,180,150,0.95);
-padding:20px;
-border-radius:12px;
-margin-bottom:20px;
-display:flex;
-flex-wrap:wrap;
-gap:10px;
-align-items:center;
+.delete-btn:hover {
+    background: #7b241c;
 }
 
-.add-section input{
-padding:8px;
-border-radius:5px;
-border:1px solid #a88a78;
+/* ===== Modal ===== */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    justify-content: center;
+    align-items: center;
 }
 
-.add-section button{
-padding:8px 15px;
-background:#4b3a2a;
-color:white;
-border:none;
-border-radius:5px;
-cursor:pointer;
+.modal-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
-.add-section button:hover{
-background:#2e1f13;
+.modal-close {
+    align-self: flex-end;
+    cursor: pointer;
+    font-size: 20px;
 }
 
-.camera-btn{
-padding:8px 12px;
-background:#4b3a2a;
-color:white;
-border-radius:5px;
-cursor:pointer;
+/* ===== Floating Action Button ===== */
+.fab-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #2e86de;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    padding: 15px;
+    font-size: 20px;
+    cursor: pointer;
 }
-
-/* search */
-.search-container{
-display:flex;
-align-items:center;
-margin-bottom:15px;
-}
-
-.search-container input{
-flex:1;
-padding:8px;
-border-radius:5px;
-border:1px solid #a88a78;
-}
-
-.search-container button{
-padding:8px 12px;
-background:#4b3a2a;
-color:white;
-border:none;
-border-radius:5px;
-margin-left:5px;
-cursor:pointer;
-}
-
-/* items */
-.items-grid{
-display:flex;
-overflow-x:auto;
-gap:20px;
-padding-bottom:10px;
-}
-
-.item-card{
-min-width:200px;
-flex:0 0 auto;
-background:rgba(200,180,150,0.95);
-padding:15px;
-border-radius:12px;
-text-align:center;
-color:#4b3a2a;
-box-shadow:0 4px 12px rgba(0,0,0,0.25);
-}
-
-.item-card img{
-width:100%;
-height:150px;
-object-fit:cover;
-border-radius:8px;
-margin-bottom:10px;
-}
-
-.not-available{
-margin-top:30px;
-}
-
 </style>
 </head>
-
 <body>
-
-<!-- TOPBAR -->
-<div class="topbar">
-<div class="menu-btn">☰</div>
-<h2>Items</h2>
-</div>
-
-<!-- SIDEBAR -->
-<div class="sidebar" id="sidebar">
-<a href="dashboard.html">Dashboard</a>
-<a href="item.html">Items</a>
-<a href="#">Sales</a>
-<a href="#">Reports</a>
-<a href="#" id="logoutBtn">Logout</a>
-</div>
-
-<!-- MAIN -->
-<div class="main">
-
-<!-- ADD ITEM -->
-<div class="add-section">
-
-<input type="text" id="name" placeholder="Item Name">
-
-<input type="text" id="description" placeholder="Description">
-
-<input type="number" id="stock" placeholder="Stock">
-
-<input type="file" accept="image/*" capture="environment" id="imageInput" style="display:none;">
-
-<button class="camera-btn" onclick="document.getElementById('imageInput').click()">📷 Scan / Upload</button>
-
-<button onclick="addItem()">Add Item</button>
-
-</div>
-
-<!-- SEARCH -->
-<div class="search-container">
-
-<input type="text" id="searchInput" placeholder="Search items..." oninput="filterItems()">
-
-<button>🔍</button>
-
-</div>
 
 <h3>Available Items</h3>
 <div class="items-grid" id="itemsGrid"></div>
 
 <div class="not-available">
-
-<h3>NOT AVAIL</h3>
-
-<div class="items-grid" id="outOfStockGrid"></div>
-
+    <h3>NOT AVAIL</h3>
+    <div class="items-grid" id="outOfStockGrid"></div>
 </div>
 
+<!-- Floating Action Button -->
+<button class="fab-btn" id="openModalBtn">🔍 / 📷</button>
+
+<!-- Modal for search, scan, and edit -->
+<div class="modal" id="searchModal">
+    <div class="modal-content">
+        <span class="modal-close" id="closeModalBtn">&times;</span>
+        <input type="text" id="searchInput" placeholder="Search items..." oninput="filterItems()">
+        <input type="text" id="modalName" placeholder="Item Name">
+        <input type="text" id="modalDescription" placeholder="Description">
+        <input type="number" id="modalStock" placeholder="Stock">
+        <input type="file" accept="image/*" capture="environment" id="modalImageInput" style="display:none;">
+        <button onclick="document.getElementById('modalImageInput').click()">📷 Scan / Upload</button>
+        <button id="saveBtn">Save</button>
+    </div>
 </div>
 
 <script>
+let allItems = [];
+let editingItemId = null;
 
-let allItems=[];
+/* ===== Modal ===== */
+const modal = document.getElementById("searchModal");
+const openModalBtn = document.getElementById("openModalBtn");
+const closeModalBtn = document.getElementById("closeModalBtn");
+const saveBtn = document.getElementById("saveBtn");
+const modalName = document.getElementById("modalName");
+const modalDescription = document.getElementById("modalDescription");
+const modalStock = document.getElementById("modalStock");
+const modalImageInput = document.getElementById("modalImageInput");
 
-/* SIDEBAR */
-
-const sidebar=document.getElementById("sidebar");
-const menuBtn=document.querySelector(".menu-btn");
-
-menuBtn.addEventListener("click",e=>{
-e.stopPropagation();
-sidebar.classList.toggle("active");
+openModalBtn.addEventListener("click", () => modal.style.display = "flex");
+closeModalBtn.addEventListener("click", () => {
+    modal.style.display = "none";
+    editingItemId = null;
+});
+window.addEventListener("click", e => {
+    if(e.target == modal) {
+        modal.style.display = "none";
+        editingItemId = null;
+    }
 });
 
-document.addEventListener("click",e=>{
-if(!sidebar.contains(e.target)&&!menuBtn.contains(e.target)){
-sidebar.classList.remove("active");
+/* ===== Load Items ===== */
+async function loadItems() {
+    try {
+        const res = await fetch("/api/items", { credentials: "include" });
+        if(res.status === 401) { window.location = "login.html"; return; }
+        allItems = await res.json();
+        renderItems(allItems);
+    } catch(err) {
+        console.error(err);
+    }
 }
+
+/* ===== Render Items ===== */
+function renderItems(items) {
+    const itemsGrid = document.getElementById("itemsGrid");
+    const outGrid = document.getElementById("outOfStockGrid");
+    itemsGrid.innerHTML = "";
+    outGrid.innerHTML = "";
+
+    items.forEach(item => {
+        const card = `
+        <div class="item-card">
+            <img src="${item.image || ''}" onerror="this.src='https://via.placeholder.com/200'">
+            <h4>${item.name}</h4>
+            <p>${item.description || ''}</p>
+            <p>Stock: ${item.stock}</p>
+            <div class="item-actions">
+                <button class="edit-btn" onclick="openEdit(${JSON.stringify(item).replace(/"/g,'&quot;')})">✏️ Edit</button>
+                <button class="delete-btn" onclick="deleteItem('${item._id}')">🗑️ Delete</button>
+            </div>
+        </div>`;
+        if(item.stock > 0) itemsGrid.innerHTML += card;
+        else outGrid.innerHTML += card;
+    });
+}
+
+/* ===== Add Item ===== */
+async function addItem() {
+    const name = document.getElementById("name").value;
+    const description = document.getElementById("description").value;
+    const stock = document.getElementById("stock").value;
+    const image = document.getElementById("imageInput").files[0];
+
+    if(!name || !stock) { alert("Name and stock required"); return; }
+
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("description", description);
+    formData.append("stock", stock);
+    if(image) formData.append("image", image);
+
+    const res = await fetch("/api/items", {
+        method: "POST",
+        body: formData,
+        credentials: "include"
+    });
+    const data = await res.json();
+    alert(data.message);
+
+    document.getElementById("name").value = "";
+    document.getElementById("description").value = "";
+    document.getElementById("stock").value = "";
+    document.getElementById("imageInput").value = "";
+
+    loadItems();
+}
+
+/* ===== Edit Item ===== */
+function openEdit(item) {
+    editingItemId = item._id;
+    modalName.value = item.name;
+    modalDescription.value = item.description;
+    modalStock.value = item.stock;
+    modal.style.display = "flex";
+}
+
+saveBtn.addEventListener("click", async () => {
+    if(!editingItemId) { modal.style.display = "none"; return; }
+
+    const formData = new FormData();
+    formData.append("name", modalName.value);
+    formData.append("description", modalDescription.value);
+    formData.append("stock", modalStock.value);
+    if(modalImageInput.files[0]) formData.append("image", modalImageInput.files[0]);
+
+    const res = await fetch(`/api/items/${editingItemId}`, {
+        method: "PUT",
+        body: formData,
+        credentials: "include"
+    });
+    const data = await res.json();
+    alert(data.message);
+
+    modal.style.display = "none";
+    editingItemId = null;
+    modalName.value = "";
+    modalDescription.value = "";
+    modalStock.value = "";
+    modalImageInput.value = "";
+
+    loadItems();
 });
 
-/* LOGOUT */
+/* ===== Delete Item ===== */
+async function deleteItem(id) {
+    if(!confirm("Are you sure you want to delete this item?")) return;
 
-document.getElementById("logoutBtn").addEventListener("click",async e=>{
+    const res = await fetch(`/api/items/${id}`, { method: "DELETE", credentials: "include" });
+    const data = await res.json();
+    alert(data.message);
 
-e.preventDefault();
-
-await fetch("/logout",{method:"POST",credentials:"include"});
-
-localStorage.removeItem("token");
-localStorage.removeItem("user");
-
-window.location="login.html";
-
-});
-
-/* LOAD ITEMS */
-
-async function loadItems(){
-
-try{
-
-const res=await fetch("/api/items",{credentials:"include"});
-
-if(res.status===401){
-window.location="login.html";
-return;
+    loadItems();
 }
 
-allItems=await res.json();
-
-renderItems(allItems);
-
-}catch(err){
-console.error(err);
+/* ===== Filter Items ===== */
+function filterItems() {
+    const term = document.getElementById("searchInput").value.toLowerCase();
+    const filtered = allItems.filter(item =>
+        item.name.toLowerCase().includes(term) ||
+        (item.description && item.description.toLowerCase().includes(term))
+    );
+    renderItems(filtered);
 }
-
-}
-
-/* RENDER ITEMS */
-
-function renderItems(items){
-
-const itemsGrid=document.getElementById("itemsGrid");
-const outGrid=document.getElementById("outOfStockGrid");
-
-itemsGrid.innerHTML="";
-outGrid.innerHTML="";
-
-items.forEach(item=>{
-
-const card=`
-<div class="item-card">
-
-<img src="${item.image || ''}" onerror="this.src='https://via.placeholder.com/200'">
-
-<h4>${item.name}</h4>
-
-<p>${item.description || ''}</p>
-
-<p>Stock: ${item.stock}</p>
-
-</div>
-`;
-
-if(item.stock>0){
-itemsGrid.innerHTML+=card;
-}else{
-outGrid.innerHTML+=card;
-}
-
-});
-
-}
-
-/* ADD ITEM */
-
-async function addItem(){
-
-const name=document.getElementById("name").value;
-const description=document.getElementById("description").value;
-const stock=document.getElementById("stock").value;
-const image=document.getElementById("imageInput").files[0];
-
-if(!name||!stock){
-alert("Name and stock required");
-return;
-}
-
-const formData=new FormData();
-
-formData.append("name",name);
-formData.append("description",description);
-formData.append("stock",stock);
-
-if(image){
-formData.append("image",image);
-}
-
-const res=await fetch("/api/items",{
-method:"POST",
-body:formData,
-credentials:"include"
-});
-
-const data=await res.json();
-
-alert(data.message);
-
-document.getElementById("name").value="";
-document.getElementById("description").value="";
-document.getElementById("stock").value="";
-document.getElementById("imageInput").value="";
 
 loadItems();
-
-}
-
-/* SEARCH */
-
-function filterItems(){
-
-const term=document.getElementById("searchInput").value.toLowerCase();
-
-const filtered=allItems.filter(item=>
-item.name.toLowerCase().includes(term)||
-(item.description && item.description.toLowerCase().includes(term))
-);
-
-renderItems(filtered);
-
-}
-
-/* START */
-
-loadItems();
-
 </script>
-
 </body>
 </html>
