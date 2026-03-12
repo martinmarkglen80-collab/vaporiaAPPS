@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sales - Vaporia Inventory System</title>
+<title>Reports - Vaporia Inventory System</title>
 <style>
 body {
     margin: 0;
@@ -69,7 +69,9 @@ body::before {
     gap:10px;
     align-items:center;
 }
-.add-section input { padding:8px; border-radius:5px; border:1px solid #a88a78; }
+.add-section input {
+    padding:8px; border-radius:5px; border:1px solid #a88a78;
+}
 .add-section button {
     padding:8px 15px;
     background:#4b3a2a;
@@ -99,7 +101,7 @@ th, td {
 th { background: rgba(193,168,142,0.9); }
 .edit-btn { background:#2e86de; color:white; padding:5px 10px; border:none; border-radius:4px; cursor:pointer; }
 .delete-btn { background:#c0392b; color:white; padding:5px 10px; border:none; border-radius:4px; cursor:pointer; }
-.inline-input { width:80%; padding:4px; border-radius:4px; border:1px solid #a88a78; }
+.inline-input { width:90%; padding:4px; border-radius:4px; border:1px solid #a88a78; }
 
 /* Modal Search */
 #openSearchModal {
@@ -155,7 +157,7 @@ th { background: rgba(193,168,142,0.9); }
 <!-- Topbar -->
 <div class="topbar">
     <div class="menu-btn">☰</div>
-    <h2>Sales</h2>
+    <h2>Reports</h2>
 </div>
 
 <!-- Sidebar -->
@@ -164,7 +166,6 @@ th { background: rgba(193,168,142,0.9); }
     <a href="items.html">Items</a>
     <a href="sales.html">Sales</a>
     <a href="reports.html">Reports</a>
-    <a href="suppliers.html">Suppliers</a>
     <a href="#" id="logoutBtn">Logout</a>
 </div>
 
@@ -172,20 +173,17 @@ th { background: rgba(193,168,142,0.9); }
 <div class="main">
 
 <div class="add-section">
-<input type="text" id="saleItem" placeholder="Item Name">
-<input type="number" id="saleQty" placeholder="Quantity">
-<input type="number" id="salePrice" placeholder="Price">
-<button onclick="addSale()">Add Sale</button>
+<input type="text" id="reportTitle" placeholder="Report Title">
+<input type="text" id="reportDesc" placeholder="Description">
+<button onclick="addReport()">Add Report</button>
 </div>
 
 <div class="table-container">
-<table id="salesTable">
+<table id="reportsTable">
 <thead>
 <tr>
-<th>Item</th>
-<th>Quantity</th>
-<th>Price</th>
-<th>Total</th>
+<th>Title</th>
+<th>Description</th>
 <th>Actions</th>
 </tr>
 </thead>
@@ -197,12 +195,12 @@ th { background: rgba(193,168,142,0.9); }
 <div class="modal" id="searchModal">
 <div class="modal-content">
 <span class="modal-close" id="closeSearchModal">&times;</span>
-<input type="text" id="searchInputModal" placeholder="Search sales..." oninput="filterSales()">
+<input type="text" id="searchInputModal" placeholder="Search reports..." oninput="filterReports()">
 </div>
 </div>
 
 <script>
-let allSales = [];
+let allReports=[];
 
 /* Sidebar */
 const sidebar = document.getElementById("sidebar");
@@ -221,71 +219,68 @@ document.getElementById("logoutBtn").addEventListener("click", async e=>{
     window.location="login.html";
 });
 
-/* Search Modal */
+/* Modal Search */
 const searchModal=document.getElementById("searchModal");
 document.getElementById("openSearchModal").onclick=()=> searchModal.style.display="flex";
 document.getElementById("closeSearchModal").onclick=()=> searchModal.style.display="none";
 window.onclick=e=>{ if(e.target==searchModal) searchModal.style.display="none"; }
 
-/* Load Sales */
-async function loadSales(){
-    const res = await fetch("/api/sales",{credentials:"include"});
-    allSales = await res.json();
-    renderSales(allSales);
+/* Load Reports */
+async function loadReports(){
+    const res = await fetch("/api/reports",{credentials:"include"});
+    allReports = await res.json();
+    renderReports(allReports);
 }
 
 /* Render Table */
-function renderSales(sales){
-    const tbody = document.querySelector("#salesTable tbody");
-    tbody.innerHTML = "";
-    sales.forEach(sale=>{
+function renderReports(reports){
+    const tbody = document.querySelector("#reportsTable tbody");
+    tbody.innerHTML="";
+    reports.forEach(rep=>{
         const tr = document.createElement("tr");
         tr.innerHTML = `
-            <td>${sale.item}</td>
-            <td>${sale.quantity}</td>
-            <td>₱${sale.price}</td>
-            <td>₱${sale.total}</td>
+            <td>${rep.title}</td>
+            <td>${rep.description}</td>
             <td>
-                <button class="edit-btn" onclick="editSale('${sale._id}', this)">Edit</button>
-                <button class="delete-btn" onclick="deleteSale('${sale._id}')">Delete</button>
+                <button class="edit-btn" onclick="editReport('${rep._id}', this)">Edit</button>
+                <button class="delete-btn" onclick="deleteReport('${rep._id}')">Delete</button>
             </td>
         `;
         tbody.appendChild(tr);
     });
 }
 
-/* Add Sale */
-async function addSale(){
-    const item=document.getElementById("saleItem").value;
-    const qty=document.getElementById("saleQty").value;
-    const price=document.getElementById("salePrice").value;
-    if(!item||!qty||!price){ alert("All fields required"); return; }
+/* Add Report */
+async function addReport(){
+    const title=document.getElementById("reportTitle").value;
+    const desc=document.getElementById("reportDesc").value;
+    if(!title){ alert("Title required"); return; }
 
-    await fetch("/api/sales",{
+    await fetch("/api/reports",{
         method:"POST",
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({item, quantity:qty, price})
+        body: JSON.stringify({title, description:desc})
     });
-    document.getElementById("saleItem").value="";
-    document.getElementById("saleQty").value="";
-    document.getElementById("salePrice").value="";
-    loadSales();
+
+    document.getElementById("reportTitle").value="";
+    document.getElementById("reportDesc").value="";
+    loadReports();
 }
 
-/* Delete Sale */
-async function deleteSale(id){
-    if(!confirm("Delete this sale?")) return;
-    await fetch(`/api/sales/${id}`,{method:"DELETE"});
-    loadSales();
+/* Delete Report */
+async function deleteReport(id){
+    if(!confirm("Delete this report?")) return;
+    await fetch(`/api/reports/${id}`,{method:"DELETE"});
+    loadReports();
 }
 
 /* Search Filter */
-function filterSales(){
-    const term = document.getElementById("searchInputModal").value.toLowerCase();
-    renderSales(allSales.filter(s=> s.item.toLowerCase().includes(term)));
+function filterReports(){
+    const term=document.getElementById("searchInputModal").value.toLowerCase();
+    renderReports(allReports.filter(r=> r.title.toLowerCase().includes(term) || r.description.toLowerCase().includes(term)));
 }
 
-loadSales();
+loadReports();
 </script>
 
 </body>
