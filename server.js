@@ -12,39 +12,37 @@ require("dotenv").config();
 const app = express();
 
 /* =========================
-   Middleware
+   MIDDLEWARE
 ========================= */
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(__dirname));
-app.use("/uploads", express.static("uploads")); // serve uploaded images
+app.use("/uploads", express.static("uploads")); // Serve uploaded images
 
 /* =========================
-   MongoDB Connection
+   MONGODB CONNECTION
 ========================= */
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("✅ MongoDB Connected"))
-    .catch(err => console.log("❌ MongoDB Error:", err));
+    .catch(err => console.error("❌ MongoDB Error:", err));
 
 /* =========================
-   Multer Config for Images
+   MULTER CONFIG FOR IMAGE UPLOADS
 ========================= */
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
+    destination: (req, file, cb) => {
         const dir = "./uploads";
         if (!fs.existsSync(dir)) fs.mkdirSync(dir);
         cb(null, dir);
     },
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + "-" + file.originalname);
-    }
+    filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`)
 });
 const upload = multer({ storage });
 
 /* =========================
-   Schemas & Models
+   SCHEMAS & MODELS
 ========================= */
 const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
@@ -57,10 +55,18 @@ const itemSchema = new mongoose.Schema({
     name: { type: String, required: true },
     description: { type: String },
     stock: { type: Number, required: true },
-    price: { type: Number, required: true },
+    price: { type: Number, default: 0 },
     image: { type: String }
 });
 const Item = mongoose.model("Item", itemSchema);
+
+const saleSchema = new mongoose.Schema({
+    item: { type: mongoose.Schema.Types.ObjectId, ref: "Item", required: true },
+    quantity: { type: Number, required: true },
+    total: { type: Number, required: true },
+    date: { type: Date, default: Date.now }
+});
+const Sale = mongoose.model("Sale", saleSchema);
 
 const supplierSchema = new mongoose.Schema({
     name: { type: String, required: true },
@@ -68,12 +74,14 @@ const supplierSchema = new mongoose.Schema({
 });
 const Supplier = mongoose.model("Supplier", supplierSchema);
 
+const reportSchema = new mongoose.Schema({ name: { type: String, required: true } }, { timestamps: true });
+const Report = mongoose.model("Report", reportSchema);
+
 /* =========================
-   Routes
+   AUTH ROUTES
 ========================= */
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "login.html")));
 
-/* ===== REGISTER ===== */
 app.post("/register", async (req, res) => {
     try {
         const { username, email, password } = req.body;
@@ -81,11 +89,11 @@ app.post("/register", async (req, res) => {
             return res.status(400).json({ message: "All fields required" });
 
         const existing = await User.findOne({ $or: [{ username }, { email }] });
-        if (existing)
-            return res.status(400).json({ message: "Username or Email exists" });
+        if (existing) return res.status(400).json({ message: "Username or Email exists" });
 
         const hashed = await bcrypt.hash(password, 10);
         await new User({ username, email, password: hashed }).save();
+
         res.json({ message: "Account created successfully!" });
     } catch (err) {
         console.error(err);
@@ -93,7 +101,6 @@ app.post("/register", async (req, res) => {
     }
 });
 
-/* ===== LOGIN ===== */
 app.post("/login", async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -106,8 +113,7 @@ app.post("/login", async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
 
-        if (!process.env.JWT_SECRET)
-            return res.status(500).json({ message: "JWT secret not set" });
+        if (!process.env.JWT_SECRET) return res.status(500).json({ message: "JWT secret not set" });
 
         const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, { expiresIn: "7d" });
         res.cookie("token", token, {
@@ -124,13 +130,14 @@ app.post("/login", async (req, res) => {
     }
 });
 
-/* ===== LOGOUT ===== */
 app.post("/logout", (req, res) => {
     res.clearCookie("token");
     res.json({ message: "Logged out" });
 });
 
-/* ===== DASHBOARD ===== */
+/* =========================
+   DASHBOARD ROUTE
+========================= */
 app.get("/api/dashboard", async (req, res) => {
     const token = req.cookies.token;
     if (!token) return res.status(401).json({ message: "Unauthorized" });
@@ -141,25 +148,20 @@ app.get("/api/dashboard", async (req, res) => {
         const totalItems = await Item.countDocuments();
         const availableItems = await Item.countDocuments({ stock: { $gt: 0 } });
         const outOfStock = await Item.countDocuments({ stock: { $lte: 0 } });
-        const items = await Item.find();
+        const totalSales = await Sale.countDocuments();
+        const salesData = await Sale.find();
+        let totalRevenue = 0;
+        salesData.forEach(s => totalRevenue += s.total);
 
-        let totalStock = 0;
-        items.forEach(item => totalStock += item.stock);
-
-        res.json({
-            totalItems,
-            availableItems,
-            outOfStock,
-            totalSales: 0,     // placeholder
-            totalRevenue: 0    // placeholder
-        });
+        res.json({ totalItems, availableItems, outOfStock, totalSales, totalRevenue });
     } catch (err) {
-        console.error(err);
         res.status(500).json({ message: "Server error" });
     }
 });
 
-/* ===== ITEMS API ===== */
+/* =========================
+   ITEMS ROUTES
+========================= */
 app.get("/api/items", async (req, res) => {
     const token = req.cookies.token;
     if (!token) return res.status(401).json({ message: "Unauthorized" });
@@ -169,118 +171,142 @@ app.get("/api/items", async (req, res) => {
         const items = await Item.find();
         res.json(items);
     } catch (err) {
-        console.error(err);
         res.status(500).json({ message: "Server error" });
     }
 });
 
 app.post("/api/items", upload.single("image"), async (req, res) => {
-    const token = req.cookies.token;
-    if (!token) return res.status(401).json({ message: "Unauthorized" });
-
     try {
-        jwt.verify(token, process.env.JWT_SECRET);
-
         const { name, description, stock, price } = req.body;
-        if (!name || !stock || !price) return res.status(400).json({ message: "Name, stock, and price required" });
-
-        const newItem = new Item({
-            name,
-            description,
-            stock,
-            price,
-            image: req.file ? `/uploads/${req.file.filename}` : ""
-        });
-        await newItem.save();
-        res.json({ message: "Item added successfully" });
+        const image = req.file ? `/uploads/${req.file.filename}` : "";
+        const item = new Item({ name, description, stock, price, image });
+        await item.save();
+        res.json({ message: "Item added" });
     } catch (err) {
-        console.error(err);
         res.status(500).json({ message: "Server error" });
     }
 });
 
 app.put("/api/items/:id", upload.single("image"), async (req, res) => {
-    const token = req.cookies.token;
-    if (!token) return res.status(401).json({ message: "Unauthorized" });
-
     try {
-        jwt.verify(token, process.env.JWT_SECRET);
-
         const { name, description, stock, price } = req.body;
         const updateData = { name, description, stock, price };
         if (req.file) updateData.image = `/uploads/${req.file.filename}`;
-
-        await Item.findByIdAndUpdate(req.params.id, updateData);
+        await Item.findByIdAndUpdate(req.params.id, updateData, { new: true });
         res.json({ message: "Item updated" });
     } catch (err) {
-        console.error(err);
         res.status(500).json({ message: "Server error" });
     }
 });
 
 app.delete("/api/items/:id", async (req, res) => {
-    const token = req.cookies.token;
-    if (!token) return res.status(401).json({ message: "Unauthorized" });
-
     try {
-        jwt.verify(token, process.env.JWT_SECRET);
         await Item.findByIdAndDelete(req.params.id);
         res.json({ message: "Item deleted" });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Server error" });
-    }
-});
-
-/* ===== SUPPLIERS API ===== */
-app.get("/api/suppliers", async (req, res) => {
-    const token = req.cookies.token;
-    if (!token) return res.status(401).json({ message: "Unauthorized" });
-
-    try {
-        jwt.verify(token, process.env.JWT_SECRET);
-        const suppliers = await Supplier.find();
-        res.json(suppliers);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Server error" });
-    }
-});
-
-app.post("/api/suppliers", async (req, res) => {
-    const token = req.cookies.token;
-    if (!token) return res.status(401).json({ message: "Unauthorized" });
-
-    try {
-        jwt.verify(token, process.env.JWT_SECRET);
-        const { name, contact } = req.body;
-        if (!name) return res.status(400).json({ message: "Name required" });
-
-        const newSupplier = new Supplier({ name, contact });
-        await newSupplier.save();
-        res.json({ message: "Supplier added successfully" });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Server error" });
-    }
-});
-
-app.delete("/api/suppliers/:id", async (req, res) => {
-    const token = req.cookies.token;
-    if (!token) return res.status(401).json({ message: "Unauthorized" });
-
-    try {
-        jwt.verify(token, process.env.JWT_SECRET);
-        await Supplier.findByIdAndDelete(req.params.id);
-        res.json({ message: "Supplier deleted" });
-    } catch (err) {
-        console.error(err);
         res.status(500).json({ message: "Server error" });
     }
 });
 
 /* =========================
-   Start Server
+   SALES ROUTES
+========================= */
+app.get("/api/sales", async (req, res) => {
+    try {
+        const token = req.cookies.token;
+        if (!token) return res.status(401).json({ message: "Unauthorized" });
+
+        jwt.verify(token, process.env.JWT_SECRET);
+        const sales = await Sale.find().populate("item");
+        res.json(sales);
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+app.post("/api/sales", async (req, res) => {
+    try {
+        const { itemId, quantity } = req.body;
+        const item = await Item.findById(itemId);
+        if (!item) return res.status(400).json({ message: "Item not found" });
+
+        const total = item.price * quantity;
+        const sale = new Sale({ item: itemId, quantity, total });
+        await sale.save();
+
+        item.stock -= quantity;
+        await item.save();
+
+        res.json({ message: "Sale recorded" });
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+/* =========================
+   SUPPLIERS ROUTES
+========================= */
+app.get("/api/suppliers", async (req, res) => {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+
+    jwt.verify(token, process.env.JWT_SECRET);
+    const suppliers = await Supplier.find();
+    res.json(suppliers);
+});
+
+app.post("/api/suppliers", async (req, res) => {
+    const { name, contact } = req.body;
+    const supplier = new Supplier({ name, contact });
+    await supplier.save();
+    res.json({ message: "Supplier added" });
+});
+
+app.put("/api/suppliers/:id", async (req, res) => {
+    const { name, contact } = req.body;
+    await Supplier.findByIdAndUpdate(req.params.id, { name, contact });
+    res.json({ message: "Supplier updated" });
+});
+
+app.delete("/api/suppliers/:id", async (req, res) => {
+    await Supplier.findByIdAndDelete(req.params.id);
+    res.json({ message: "Supplier deleted" });
+});
+
+/* =========================
+   REPORTS ROUTES
+========================= */
+app.get("/api/reports", async (req, res) => {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+
+    jwt.verify(token, process.env.JWT_SECRET);
+    const reports = await Report.find().sort({ createdAt: -1 });
+    res.json(reports);
+});
+
+app.post("/api/reports", async (req, res) => {
+    const { name } = req.body;
+    if (!name) return res.status(400).json({ message: "Report name required" });
+
+    const report = new Report({ name });
+    await report.save();
+    res.json({ message: "Report added" });
+});
+
+app.put("/api/reports/:id", async (req, res) => {
+    const { name } = req.body;
+    await Report.findByIdAndUpdate(req.params.id, { name });
+    res.json({ message: "Report updated" });
+});
+
+app.delete("/api/reports/:id", async (req, res) => {
+    await Report.findByIdAndDelete(req.params.id);
+    res.json({ message: "Report deleted" });
+});
+
+/* =========================
+   SERVER START
 ========================= */
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
