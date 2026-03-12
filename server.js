@@ -57,6 +57,7 @@ const itemSchema = new mongoose.Schema({
     name: { type: String, required: true },
     description: { type: String },
     stock: { type: Number, required: true },
+    price: { type: Number, default: 0 },
     image: { type: String }
 });
 const Item = mongoose.model("Item", itemSchema);
@@ -131,35 +132,33 @@ app.get("/api/dashboard", async (req, res) => {
     try {
         jwt.verify(token, process.env.JWT_SECRET);
 
-        // Total items count
         const totalItems = await Item.countDocuments();
-
-        // Available items (stock > 0)
         const availableItems = await Item.countDocuments({ stock: { $gt: 0 } });
-
-        // Out of stock items
         const outOfStock = await Item.countDocuments({ stock: { $lte: 0 } });
-
-        // Optional: sum up total stock or revenue if you have a sales model
-        // For now we can sum stock as example
         const items = await Item.find();
-        let totalStock = 0;
-        items.forEach(item => totalStock += item.stock);
+
+        let totalStock = 0, totalRevenue = 0, totalSales = 0;
+        items.forEach(item => {
+            totalStock += item.stock;
+            totalRevenue += (item.stock * item.price);
+            // totalSales can be tracked if you add a sales model
+        });
 
         res.json({
             totalItems,
             availableItems,
             outOfStock,
-            totalStock
+            totalStock,
+            totalRevenue,
+            totalSales
         });
-
     } catch (err) {
         console.error(err);
-        res.status(401).json({ message: "Invalid token" });
+        res.status(401).json({ message: "Unauthorized" });
     }
 });
 
-/* ===== ITEMS ===== */
+/* ===== ITEMS API ===== */
 // Get all items
 app.get("/api/items", async (req, res) => {
     const token = req.cookies.token;
@@ -169,36 +168,51 @@ app.get("/api/items", async (req, res) => {
         jwt.verify(token, process.env.JWT_SECRET);
         const items = await Item.find();
         res.json(items);
-    } catch {
-        res.status(401).json({ message: "Invalid token" });
+    } catch (err) {
+        res.status(401).json({ message: "Unauthorized" });
     }
 });
 
-// Add item
+// Add new item
 app.post("/api/items", upload.single("image"), async (req, res) => {
-    try {
-        const { name, description, stock } = req.body;
-        if (!name || !stock) return res.status(400).json({ message: "Name and stock required" });
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
 
-        const imagePath = req.file ? "/uploads/" + req.file.filename : "";
-        const newItem = new Item({ name, description, stock, image: imagePath });
+    try {
+        jwt.verify(token, process.env.JWT_SECRET);
+
+        const { name, description, stock, price } = req.body;
+        let imagePath = req.file ? "/uploads/" + req.file.filename : "";
+
+        const newItem = new Item({ name, description, stock, price, image: imagePath });
         await newItem.save();
-        res.json({ message: "Item added successfully!" });
+        res.json({ message: "Item added" });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Server error" });
     }
 });
 
-// Edit item
+// Update item
 app.put("/api/items/:id", upload.single("image"), async (req, res) => {
-    try {
-        const { name, description, stock } = req.body;
-        const update = { name, description, stock };
-        if (req.file) update.image = "/uploads/" + req.file.filename;
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
 
-        await Item.findByIdAndUpdate(req.params.id, update);
-        res.json({ message: "Item updated successfully!" });
+    try {
+        jwt.verify(token, process.env.JWT_SECRET);
+
+        const item = await Item.findById(req.params.id);
+        if (!item) return res.status(404).json({ message: "Item not found" });
+
+        const { name, description, stock, price } = req.body;
+        if (name) item.name = name;
+        if (description) item.description = description;
+        if (stock) item.stock = stock;
+        if (price) item.price = price;
+        if (req.file) item.image = "/uploads/" + req.file.filename;
+
+        await item.save();
+        res.json({ message: "Item updated" });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Server error" });
@@ -207,9 +221,14 @@ app.put("/api/items/:id", upload.single("image"), async (req, res) => {
 
 // Delete item
 app.delete("/api/items/:id", async (req, res) => {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+
     try {
+        jwt.verify(token, process.env.JWT_SECRET);
+
         await Item.findByIdAndDelete(req.params.id);
-        res.json({ message: "Item deleted successfully!" });
+        res.json({ message: "Item deleted" });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Server error" });
@@ -220,4 +239,4 @@ app.delete("/api/items/:id", async (req, res) => {
    Start Server
 ========================= */
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🔥 Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
