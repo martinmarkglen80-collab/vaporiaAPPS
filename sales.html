@@ -14,16 +14,13 @@ body {
 body::before {
     content: "";
     position: fixed;
-    top: 0;
-    left: 0;
     width: 100%;
     height: 100%;
     background: url('vaporia.jpg');
     background-size: 400px auto;
-    background-position: center top;
-    opacity: 0.24;
-    pointer-events: none;
-    z-index: 0;
+    background-position: center;
+    opacity: 0.25;
+    z-index: -1;
 }
 .topbar {
     padding: 15px;
@@ -56,13 +53,9 @@ body::before {
     color: #4b3a2a;
     font-size: 18px;
 }
-.sidebar a:hover {
-    background: rgba(143,123,101,0.9);
-    color: white;
-}
-.sidebar.active {
-    left: 0;
-}
+.sidebar a:hover { background: rgba(143,123,101,0.9); color: white; }
+.sidebar.active { left: 0; }
+
 .main {
     padding: 30px;
     position: relative;
@@ -78,8 +71,8 @@ body::before {
     gap: 10px;
     align-items: center;
 }
-.add-section select,
-.add-section input {
+.add-section input,
+.add-section select {
     padding: 8px;
     border-radius: 5px;
     border: 1px solid #a88a78;
@@ -92,9 +85,8 @@ body::before {
     border-radius: 5px;
     cursor: pointer;
 }
-.add-section button:hover {
-    background: #2e1f13;
-}
+.add-section button:hover { background: #2e1f13; }
+
 table {
     width: 100%;
     border-collapse: collapse;
@@ -105,9 +97,17 @@ th, td {
     padding: 10px;
     text-align: center;
 }
-th {
-    background: #b9a68d;
+th { background: #b9a68d; }
+
+.delete-btn {
+    background: #c0392b;
+    color: white;
+    padding: 5px 8px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
 }
+.delete-btn:hover { background: #7b241c; }
 </style>
 </head>
 <body>
@@ -120,6 +120,7 @@ th {
 <div class="sidebar" id="sidebar">
     <a href="dashboard.html">Dashboard</a>
     <a href="items.html">Items</a>
+    <a href="sales.html">Sales</a>
     <a href="reports.html">Reports</a>
     <a href="suppliers.html">Suppliers</a>
     <a href="#" id="logoutBtn">Logout</a>
@@ -127,21 +128,25 @@ th {
 
 <div class="main">
     <div class="add-section">
-        <select id="itemSelect" onchange="updatePrice()">
+        <select id="itemSelect">
             <option value="">Select Item</option>
         </select>
-        <input type="number" id="price" placeholder="Price" readonly>
         <input type="number" id="quantity" placeholder="Quantity">
+        <input type="text" id="price" placeholder="Price" readonly>
         <button onclick="addSale()">Add Sale</button>
     </div>
 
+    <h3>Sales Records</h3>
     <table>
         <thead>
             <tr>
+                <th>ID</th>
                 <th>Item</th>
                 <th>Price</th>
                 <th>Quantity</th>
                 <th>Total</th>
+                <th>Date</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody id="salesTable"></tbody>
@@ -149,92 +154,85 @@ th {
 </div>
 
 <script>
-const sidebar = document.getElementById("sidebar");
-const menuBtn = document.querySelector(".menu-btn");
-const logoutBtn = document.getElementById("logoutBtn");
+let availableItems = [];
 
-menuBtn.onclick = e => {
-    e.stopPropagation();
-    sidebar.classList.toggle("active");
-};
+// Load available items for the select dropdown
+async function loadItemsForSales() {
+    const res = await fetch("/api/items", { credentials: "include" });
+    availableItems = (await res.json()).filter(i => i.stock > 0);
 
-document.addEventListener("click", e => {
-    if (!sidebar.contains(e.target) && !menuBtn.contains(e.target)) {
-        sidebar.classList.remove("active");
-    }
+    const select = document.getElementById("itemSelect");
+    select.innerHTML = '<option value="">Select Item</option>';
+
+    availableItems.forEach(item => {
+        const opt = document.createElement("option");
+        opt.value = item._id;
+        opt.textContent = item.name;
+        select.appendChild(opt);
+    });
+}
+
+// Update price field when item is selected
+document.getElementById("itemSelect").addEventListener("change", function() {
+    const item = availableItems.find(i => i._id === this.value);
+    document.getElementById("price").value = item ? item.price : "";
 });
 
-logoutBtn.onclick = async e => {
-    e.preventDefault();
-    await fetch("/logout", { method: "POST", credentials: "include" });
-    window.location = "login.html";
-};
-
-let allItems = [];
-
-async function loadItems() {
-    const res = await fetch("/api/items", { credentials: "include" });
-    allItems = await res.json();
-
-    const sel = document.getElementById("itemSelect");
-    sel.innerHTML = '<option value="">Select Item</option>';
-
-    allItems
-        .filter(i => i.stock > 0)
-        .forEach(i => {
-            sel.innerHTML += `<option value="${i._id}" data-price="${i.price}">${i.name} (Stock: ${i.stock})</option>`;
-        });
-}
-
-function updatePrice() {
-    const sel = document.getElementById("itemSelect");
-    const price = sel.selectedOptions[0]?.dataset.price || 0;
-    document.getElementById("price").value = price;
-}
-
-async function addSale() {
-    const itemId = document.getElementById("itemSelect").value;
-    const price = parseFloat(document.getElementById("price").value);
-    const quantity = parseInt(document.getElementById("quantity").value);
-
-    if (!itemId || !quantity) {
-        alert("Select item and quantity");
-        return;
-    }
-
-    const res = await fetch("/api/sales", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ itemId, quantity, price }),
-        credentials: "include"
-    });
-
-    if (!res.ok) {
-        alert((await res.json()).message);
-        return;
-    }
-
-    document.getElementById("quantity").value = "";
-    await loadItems();
-    loadSalesTable();
-}
-
-async function loadSalesTable() {
+// Load all sales records
+async function loadSales() {
     const res = await fetch("/api/sales", { credentials: "include" });
     const sales = await res.json();
     const tbody = document.getElementById("salesTable");
     tbody.innerHTML = "";
 
-    sales.forEach(s => {
+    sales.forEach((s, i) => {
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${s.itemName}</td><td>₱${s.price}</td><td>${s.quantity}</td><td>₱${s.total}</td>`;
+        tr.innerHTML = `
+            <td>${i+1}</td>
+            <td>${s.itemName}</td>
+            <td>₱${s.price}</td>
+            <td>${s.quantity}</td>
+            <td>₱${s.total}</td>
+            <td>${new Date(s.date).toLocaleString()}</td>
+            <td><button class="delete-btn" onclick="deleteSale('${s._id}')">Delete</button></td>
+        `;
         tbody.appendChild(tr);
     });
 }
 
+// Add a sale
+async function addSale() {
+    const itemId = document.getElementById("itemSelect").value;
+    const quantity = document.getElementById("quantity").value;
+    if (!itemId || !quantity) return alert("Select item and quantity");
+
+    await fetch("/api/sales", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemId, quantity })
+    });
+
+    document.getElementById("quantity").value = "";
+    document.getElementById("itemSelect").value = "";
+    document.getElementById("price").value = "";
+
+    await loadItemsForSales();
+    await loadSales();
+}
+
+// Delete a sale
+async function deleteSale(id) {
+    if (!confirm("Delete this sale?")) return;
+    await fetch(`/api/sales/${id}`, { method: "DELETE", credentials: "include" });
+
+    await loadItemsForSales();
+    await loadSales();
+}
+
 // Initial load
-loadItems();
-loadSalesTable();
+loadItemsForSales();
+loadSales();
 </script>
 
 </body>

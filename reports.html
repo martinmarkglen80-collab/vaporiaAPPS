@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Reports - Vaporia</title>
+
 <style>
 body {
     margin: 0;
@@ -43,9 +44,7 @@ body::before {
     color: black;
     border-bottom: 1px solid rgba(0,0,0,0.2);
 }
-.sidebar a:hover {
-    background: #a8957b;
-}
+.sidebar a:hover { background: #a8957b; }
 .logout {
     position: absolute;
     bottom: 30px;
@@ -77,169 +76,128 @@ th, td {
     padding: 15px;
     text-align: center;
 }
-th {
-    background: #b9a68d;
-}
-.search-btn {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: #cbb89e;
-    border: 2px solid #333;
-    padding: 10px 15px;
+th { background: #b9a68d; }
+.edit-btn {
+    background: #2e86de;
+    color: white;
+    padding: 5px 8px;
+    border: none;
+    border-radius: 4px;
     cursor: pointer;
-    font-size: 22px;
 }
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    justify-content: center;
-    align-items: center;
-}
-.modal-content {
-    background: #d8c4ad;
-    padding: 30px;
-    border-radius: 10px;
-    width: 300px;
-    text-align: center;
-}
-.modal-content input {
-    width: 100%;
-    padding: 10px;
-    margin-top: 10px;
-}
-.close {
-    float: right;
+.edit-btn:hover { background: #1b4f72; }
+.delete-btn {
+    background: #c0392b;
+    color: white;
+    padding: 5px 8px;
+    border: none;
+    border-radius: 4px;
     cursor: pointer;
-    font-size: 22px;
 }
+.delete-btn:hover { background: #7b241c; }
+.inline-input { width: 80%; padding: 4px; border-radius: 4px; border: 1px solid #a88a78; margin: 2px 0; }
+.inline-save { background: #27ae60; padding: 4px 8px; border: none; color: white; }
+.inline-cancel { background: #c0392b; padding: 4px 8px; border: none; color: white; }
 </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <h2>Dashboard</h2>
-    <a href="dashboard.html">Dashboard</a>
-    <a href="items.html">Items</a>
-    <a href="sales.html">Sales</a>
-    <a href="reports.html">Reports</a>    
-    <a href="suppliers.html">Suppliers</a>
-    <a href="#" id="logoutBtn">Logout</a>
+<h2>Dashboard</h2>
+<a href="dashboard.html">Dashboard</a>
+<a href="items.html">Items</a>
+<a href="sales.html">Sales</a>
+<a href="reports.html">Reports</a>
+<a href="suppliers.html">Suppliers</a>
+<button class="logout" id="logoutBtn">Logout</button>
 </div>
 
 <div class="main">
-    <button class="add-btn" onclick="addReport()">ADD REPORT</button>
+<button class="add-btn" onclick="showAdd()">Add Report</button>
 
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Report Name</th>
-                <th>Report Date</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody id="reportsTable"></tbody>
-    </table>
-</div>
-
-<button class="search-btn" onclick="openSearch()">🔍</button>
-
-<div class="modal" id="searchModal">
-    <div class="modal-content">
-        <span class="close" onclick="closeSearch()">×</span>
-        <h3>Search Report</h3>
-        <input type="text" id="searchInputModal" placeholder="Search report..." oninput="filterReports()">
-    </div>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Report Name</th>
+<th>Report Date</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody id="reportsTable"></tbody>
+</table>
 </div>
 
 <script>
-const sidebar = document.getElementById("sidebar");
-const logoutBtn = document.getElementById("logoutBtn");
+let reports = [];
 
-logoutBtn.onclick = async e => {
-    e.preventDefault();
-    await fetch("/logout", { method: "POST", credentials: "include" });
-    window.location = "login.html";
-};
-
-let allReports = [];
-
-// Load reports
 async function loadReports() {
     const res = await fetch("/api/reports", { credentials: "include" });
-    allReports = await res.json();
-    renderReports(allReports);
-}
-
-// Render reports in table
-function renderReports(data) {
+    reports = await res.json();
     const tbody = document.getElementById("reportsTable");
     tbody.innerHTML = "";
-    data.forEach((r, i) => {
+    reports.forEach((r, i) => {
         const tr = document.createElement("tr");
-        const date = new Date(r.createdAt || Date.now());
+        tr.id = r._id;
         tr.innerHTML = `
-            <td>${i + 1}</td>
+            <td>${i+1}</td>
             <td>${r.name}</td>
-            <td>${date.toLocaleString()}</td>
+            <td>${new Date(r.createdAt || r.date).toLocaleString()}</td>
             <td>
-                <button onclick="editReport('${r._id}')">Edit</button>
-                <button onclick="deleteReport('${r._id}')">Delete</button>
+                <button class="edit-btn" onclick="editReport('${r._id}')">Edit</button>
+                <button class="delete-btn" onclick="deleteReport('${r._id}')">Delete</button>
             </td>
         `;
         tbody.appendChild(tr);
     });
 }
 
-// Add report
-function addReport() {
+function showAdd() {
     const name = prompt("Enter report name:");
-    if (!name) return;
-    fetch("/api/reports", {
+    if (name) addReport(name);
+}
+
+async function addReport(name) {
+    await fetch("/api/reports", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name }),
-        credentials: "include"
-    }).then(() => loadReports());
+        body: JSON.stringify({ name })
+    });
+    loadReports();
 }
 
-// Edit report
 function editReport(id) {
-    const newName = prompt("Enter new report name:");
-    if (!newName) return;
-    fetch(`/api/reports/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName }),
-        credentials: "include"
-    }).then(() => loadReports());
+    const report = reports.find(r => r._id === id);
+    const newName = prompt("Edit report name:", report.name);
+    if (newName) saveReport(id, newName);
 }
 
-// Delete report
-function deleteReport(id) {
+async function saveReport(id, name) {
+    await fetch(`/api/reports/${id}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name })
+    });
+    loadReports();
+}
+
+async function deleteReport(id) {
     if (!confirm("Delete this report?")) return;
-    fetch(`/api/reports/${id}`, {
+    await fetch(`/api/reports/${id}`, {
         method: "DELETE",
         credentials: "include"
-    }).then(() => loadReports());
+    });
+    loadReports();
 }
 
-// Search modal
-function openSearch() { document.getElementById("searchModal").style.display = "flex"; }
-function closeSearch() { document.getElementById("searchModal").style.display = "none"; }
-function filterReports() {
-    const term = document.getElementById("searchInputModal").value.toLowerCase();
-    const filtered = allReports.filter(r => r.name.toLowerCase().includes(term));
-    renderReports(filtered);
-}
+// Logout
+document.getElementById("logoutBtn").addEventListener("click", async () => {
+    await fetch("/logout", { method: "POST", credentials: "include" });
+    window.location = "login.html";
+});
 
-// Initial load
 loadReports();
 </script>
 
