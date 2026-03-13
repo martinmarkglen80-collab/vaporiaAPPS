@@ -9,7 +9,6 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
 const fs = require("fs");
-const PDFDocument = require("pdfkit");
 require("dotenv").config();
 
 const app = express();
@@ -78,11 +77,6 @@ const saleSchema = new mongoose.Schema({
  date:{type:Date,default:Date.now}
 },{timestamps:true});
 
-const reportSchema = new mongoose.Schema({
- name:String,
- date:{type:Date,default:Date.now}
-},{timestamps:true});
-
 /* =========================
    MODELS
 ========================= */
@@ -91,7 +85,6 @@ const User = mongoose.model("User",userSchema);
 const Item = mongoose.model("Item",itemSchema);
 const Supplier = mongoose.model("Supplier",supplierSchema);
 const Sale = mongoose.model("Sale",saleSchema);
-const Report = mongoose.model("Report",reportSchema);
 
 /* =========================
    AUTH MIDDLEWARE
@@ -120,7 +113,6 @@ function auth(req,res,next){
 ========================= */
 
 app.post("/register",async(req,res)=>{
- try{
 
  const {username,email,password}=req.body;
 
@@ -139,15 +131,10 @@ app.post("/register",async(req,res)=>{
 
  res.json({message:"Account created"});
 
- }catch(err){
- res.status(500).json({message:"Server error"});
- }
 });
 
 
 app.post("/login",async(req,res)=>{
-
- try{
 
  const {username,password} = req.body;
 
@@ -175,10 +162,6 @@ app.post("/login",async(req,res)=>{
  });
 
  res.json({message:"Login successful"});
-
- }catch(err){
- res.status(500).json({message:"Server error"});
- }
 
 });
 
@@ -264,14 +247,12 @@ app.get("/api/sales",auth,async(req,res)=>{
  const sales = await Sale.find().populate("item");
 
  const formatted = sales.map(s=>({
-
  _id:s._id,
  itemName:s.item ? s.item.name : "Deleted",
  price:s.price,
  quantity:s.quantity,
  total:s.total,
  date:s.date
-
  }));
 
  res.json(formatted);
@@ -367,48 +348,15 @@ app.get("/api/dashboard",auth,async(req,res)=>{
 app.get("/api/sales/chart",auth,async(req,res)=>{
 
  const sales = await Sale.aggregate([
-
  {
  $group:{
  _id:{ $month:"$date" },
  total:{ $sum:"$total" }
  }
  }
-
  ]);
 
  res.json(sales);
-
-});
-
-
-/* =========================
-   PDF SALES REPORT
-========================= */
-
-app.get("/api/reports/salespdf",auth,async(req,res)=>{
-
- const sales = await Sale.find().populate("item");
-
- const doc = new PDFDocument();
-
- res.setHeader("Content-Type","application/pdf");
- res.setHeader("Content-Disposition","attachment; filename=sales_report.pdf");
-
- doc.pipe(res);
-
- doc.fontSize(20).text("Vaporia Sales Report",{align:"center"});
- doc.moveDown();
-
- sales.forEach(s=>{
-
- doc.fontSize(12).text(
- `Item: ${s.item ? s.item.name : "Deleted"} | Qty: ${s.quantity} | Total: ₱${s.total}`
- );
-
- });
-
- doc.end();
 
 });
 
