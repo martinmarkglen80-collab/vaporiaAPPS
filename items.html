@@ -299,30 +299,41 @@ document.addEventListener("DOMContentLoaded", () => {
     // ADD ITEM
     // =========================
     async function addItem() {
-        const name = document.getElementById("itemName").value.trim();
-        const description = document.getElementById("itemDescription").value.trim();
-        const stock = parseInt(document.getElementById("itemStock").value);
-        const price = parseFloat(document.getElementById("itemPrice").value);
+    const name = document.getElementById("itemName").value;
+    const description = document.getElementById("itemDescription").value;
+    const stock = document.getElementById("itemStock").value;
+    const price = document.getElementById("itemPrice").value;
+    const imageFile = document.getElementById("itemImage").files[0];
 
-        if (!name || !description || isNaN(stock) || isNaN(price)) {
-            alert("All fields are required and must be valid numbers");
-            return;
-        }
+    if (!name || !stock || !price) {
+        alert("Name, Stock, and Price are required!");
+        return;
+    }
 
-        await fetch("/api/items", {
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("description", description);
+    formData.append("stock", stock);
+    formData.append("price", price);
+    if (imageFile) formData.append("image", imageFile);
+
+    try {
+        const res = await fetch("/api/items", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, description, stock, price }),
+            body: formData,
             credentials: "include"
         });
 
-        document.getElementById("itemName").value = "";
-        document.getElementById("itemDescription").value = "";
-        document.getElementById("itemStock").value = "";
-        document.getElementById("itemPrice").value = "";
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Failed to add item");
 
-        loadItems();
+        alert("Item added successfully!");
+        loadItems(); // refresh item table
+    } catch (err) {
+        console.error(err);
+        alert("Error: " + err.message);
     }
+}
 
     // =========================
     // DELETE ITEM
