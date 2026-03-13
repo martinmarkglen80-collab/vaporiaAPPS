@@ -4,364 +4,390 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Items - Vaporia Inventory System</title>
+
 <style>
-body {
-    margin: 0;
-    font-family: 'Segoe UI', sans-serif;
-    background: #d8c4ad;
-    position: relative;
-}
-body::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: url('vaporia.jpg');
-    background-size: 400px auto;
-    background-position: center top;
-    opacity: 0.24;
-    pointer-events: none;
-    z-index: 0;
+
+body{
+margin:0;
+font-family:'Segoe UI',sans-serif;
+background:#d8c4ad;
+position:relative;
 }
 
-/* Topbar */
-.topbar {
-    padding: 15px;
-    background: rgba(193,168,142,0.9);
-    display: flex;
-    align-items: center;
-    z-index: 1;
-    position: relative;
-}
-.menu-btn {
-    font-size: 26px;
-    cursor: pointer;
-    margin-right: 20px;
-}
-
-/* Sidebar */
-.sidebar {
-    position: fixed;
-    left: -250px;
-    top: 0;
-    width: 250px;
-    height: 100%;
-    background: rgba(168,146,120,0.95);
-    padding-top: 60px;
-    transition: 0.3s;
-    z-index: 9999;
-}
-.sidebar a {
-    display: block;
-    padding: 15px;
-    text-decoration: none;
-    color: #4b3a2a;
-    font-size: 18px;
-}
-.sidebar a:hover {
-    background: rgba(143,123,101,0.9);
-    color: white;
-}
-.sidebar.active { left: 0; }
-
-/* Main */
-.main {
-    padding: 30px;
-    position: relative;
-    z-index: 1;
+body::before{
+content:"";
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:url('vaporia.jpg');
+background-size:400px auto;
+background-position:center top;
+opacity:0.24;
+pointer-events:none;
+z-index:0;
 }
 
-/* Add Section */
-.add-section {
-    background: rgba(200,180,150,0.95);
-    padding: 20px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
-}
-.add-section input {
-    padding: 8px;
-    border-radius: 5px;
-    border: 1px solid #a88a78;
-}
-.add-section button {
-    padding: 8px 15px;
-    background: #4b3a2a;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-.add-section button:hover { background: #2e1f13; }
+/* TOPBAR */
 
-/* Floating Search */
-#openSearchModal {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    z-index: 1000;
-    padding: 12px 15px;
-    border: none;
-    border-radius: 50px;
-    background: #4b3a2a;
-    color: white;
-    font-size: 18px;
-    cursor: pointer;
+.topbar{
+padding:15px;
+background:rgba(193,168,142,0.9);
+display:flex;
+align-items:center;
+position:relative;
+z-index:1;
 }
 
-/* Modal */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 10000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
-    justify-content: center;
-    align-items: center;
-}
-.modal-content {
-    background: #d8c4ad;
-    padding: 20px;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 400px;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-.modal-close {
-    position: absolute;
-    top: 5px;
-    right: 10px;
-    font-size: 22px;
-    cursor: pointer;
-}
-.modal-content input {
-    width: 100%;
-    padding: 8px;
-    border-radius: 5px;
-    border: 1px solid #a88a78;
+.menu-btn{
+font-size:26px;
+cursor:pointer;
+margin-right:20px;
 }
 
-/* Item Cards */
-.items-grid {
-    display: flex;
-    overflow-x: auto;
-    gap: 20px;
-    padding-bottom: 10px;
+/* SIDEBAR */
+
+.sidebar{
+position:fixed;
+left:-250px;
+top:0;
+width:250px;
+height:100%;
+background:rgba(168,146,120,0.95);
+padding-top:60px;
+transition:0.3s;
+z-index:9999;
 }
-.item-card {
-    min-width: 200px;
-    flex: 0 0 auto;
-    background: rgba(200,180,150,0.95);
-    padding: 15px;
-    border-radius: 12px;
-    text-align: center;
-    color: #4b3a2a;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+
+.sidebar a{
+display:block;
+padding:15px;
+text-decoration:none;
+color:#4b3a2a;
+font-size:18px;
 }
-.item-card img {
-    width: 100%;
-    height: 150px;
-    object-fit: cover;
-    border-radius: 8px;
-    margin-bottom: 10px;
+
+.sidebar a:hover{
+background:rgba(143,123,101,0.9);
+color:white;
 }
-.item-actions {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 8px;
+
+.sidebar.active{
+left:0;
 }
-.item-actions button {
-    padding: 4px 8px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-    color: white;
+
+/* MAIN */
+
+.main{
+padding:30px;
+position:relative;
+z-index:1;
 }
-.edit-btn { background: #2e86de; }
-.delete-btn { background: #c0392b; }
-.inline-input { width: 80%; padding: 4px; border-radius: 4px; border: 1px solid #a88a78; margin: 2px 0; }
-.inline-save { background: #27ae60; padding: 4px 8px; border: none; color: white; }
-.inline-cancel { background: #c0392b; padding: 4px 8px; border: none; color: white; }
+
+/* ADD ITEM */
+
+.add-section{
+background:rgba(200,180,150,0.95);
+padding:20px;
+border-radius:12px;
+margin-bottom:20px;
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+align-items:center;
+}
+
+.add-section input{
+padding:8px;
+border-radius:5px;
+border:1px solid #a88a78;
+}
+
+.add-section button{
+padding:8px 15px;
+background:#4b3a2a;
+color:white;
+border:none;
+border-radius:5px;
+cursor:pointer;
+}
+
+.add-section button:hover{
+background:#2e1f13;
+}
+
+/* ITEM GRID */
+
+.items-grid{
+display:flex;
+overflow-x:auto;
+gap:20px;
+padding-bottom:10px;
+}
+
+.item-card{
+min-width:200px;
+flex:0 0 auto;
+background:rgba(200,180,150,0.95);
+padding:15px;
+border-radius:12px;
+text-align:center;
+color:#4b3a2a;
+box-shadow:0 4px 12px rgba(0,0,0,0.25);
+}
+
+.item-card img{
+width:100%;
+height:150px;
+object-fit:cover;
+border-radius:8px;
+margin-bottom:10px;
+}
+
+.item-actions{
+display:flex;
+justify-content:center;
+gap:10px;
+margin-top:8px;
+}
+
+.item-actions button{
+padding:4px 8px;
+border:none;
+border-radius:5px;
+cursor:pointer;
+font-size:14px;
+color:white;
+}
+
+.edit-btn{background:#2e86de;}
+.delete-btn{background:#c0392b;}
+
+/* SEARCH BUTTON */
+
+#openSearchModal{
+position:fixed;
+bottom:30px;
+right:30px;
+z-index:1000;
+padding:12px 15px;
+border:none;
+border-radius:50px;
+background:#4b3a2a;
+color:white;
+font-size:18px;
+cursor:pointer;
+}
+
+/* MODAL */
+
+.modal{
+display:none;
+position:fixed;
+z-index:10000;
+left:0;
+top:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.5);
+justify-content:center;
+align-items:center;
+}
+
+.modal-content{
+background:#d8c4ad;
+padding:20px;
+border-radius:12px;
+width:90%;
+max-width:400px;
+position:relative;
+display:flex;
+flex-direction:column;
+gap:10px;
+}
+
+.modal-close{
+position:absolute;
+top:5px;
+right:10px;
+font-size:22px;
+cursor:pointer;
+}
+
+.modal-content input{
+width:100%;
+padding:8px;
+border-radius:5px;
+border:1px solid #a88a78;
+}
+
 </style>
 </head>
+
 <body>
 
-<!-- Topbar -->
+<!-- TOPBAR -->
+
 <div class="topbar">
-    <div class="menu-btn">☰</div>
-    <h2>Items</h2>
+<div class="menu-btn" id="menuBtn">☰</div>
+<h2>Items</h2>
 </div>
 
-<!-- Sidebar -->
+<!-- SIDEBAR -->
+
 <div class="sidebar" id="sidebar">
-    <a href="dashboard.html">Dashboard</a>
-    <a href="items.html">Items</a>
-    <a href="sales.html">Sales</a>
-    <a href="reports.html">Reports</a>
-    <a href="suppliers.html">Suppliers</a>
-    <a href="#" id="logoutBtn">Logout</a>
+<a href="dashboard.html">Dashboard</a>
+<a href="items.html">Items</a>
+<a href="sales.html">Sales</a>
+<a href="reports.html">Reports</a>
+<a href="suppliers.html">Suppliers</a>
+<a href="#">Logout</a>
 </div>
 
-<!-- Main -->
+<!-- MAIN -->
+
 <div class="main">
 
-    <!-- Add Section -->
-    <div class="add-section">
-        <input type="text" id="name" placeholder="Item Name">
-        <input type="text" id="description" placeholder="Description">
-        <input type="number" id="stock" placeholder="Stock">
-        <input type="number" id="price" placeholder="Price">
-        <input type="file" accept="image/*" capture="environment" id="imageInput" style="display:none;">
-        <button onclick="document.getElementById('imageInput').click()">📷 Scan / Upload</button>
-        <button onclick="addItem()">Add Item</button>
-    </div>
+<div class="add-section">
 
-    <!-- Items Grid -->
-    <h3>Available Items</h3>
-    <div class="items-grid" id="itemsGrid"></div>
+<input type="text" id="name" placeholder="Item Name">
+<input type="text" id="description" placeholder="Description">
+<input type="number" id="stock" placeholder="Stock">
+<input type="number" id="price" placeholder="Price">
 
-    <div class="not-available">
-        <h3>NOT AVAIL</h3>
-        <div class="items-grid" id="outOfStockGrid"></div>
-    </div>
+<input type="file" accept="image/*" capture="environment" id="imageInput" style="display:none;">
+
+<button onclick="document.getElementById('imageInput').click()">📷 Upload</button>
+<button onclick="addItem()">Add Item</button>
+
 </div>
 
-<!-- Search -->
+<h3>Available Items</h3>
+<div class="items-grid" id="itemsGrid"></div>
+
+<h3>NOT AVAIL</h3>
+<div class="items-grid" id="outOfStockGrid"></div>
+
+</div>
+
+<!-- SEARCH -->
+
 <button id="openSearchModal">🔍</button>
+
 <div class="modal" id="searchModal">
-    <div class="modal-content">
-        <span class="modal-close" id="closeSearchModal">&times;</span>
-        <input type="text" id="searchInputModal" placeholder="Search items..." oninput="filterItemsModal()">
-    </div>
+<div class="modal-content">
+<span class="modal-close" id="closeSearchModal">&times;</span>
+<input type="text" id="searchInputModal" placeholder="Search items...">
+</div>
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
 
-    const tbody = document.getElementById("itemsTable");
+/* SIDEBAR */
 
-    // =========================
-    // LOAD ITEMS
-    // =========================
-    async function loadItems() {
-        try {
-            const res = await fetch("/api/items", { credentials: "include" });
-            if (!res.ok) throw new Error("Failed to fetch items");
-            const items = await res.json();
+const menuBtn=document.getElementById("menuBtn");
+const sidebar=document.getElementById("sidebar");
 
-            tbody.innerHTML = "";
-            items.forEach(item => {
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td>${item._id}</td>
-                    <td><input type="text" value="${item.name}" class="item-name"></td>
-                    <td><input type="text" value="${item.description}" class="item-desc"></td>
-                    <td><input type="number" value="${item.stock}" class="item-stock"></td>
-                    <td><input type="number" value="${item.price}" class="item-price"></td>
-                    <td><button class="delete-btn">Delete</button></td>
-                `;
+menuBtn.onclick=()=>{
+sidebar.classList.toggle("active");
+};
 
-                // Delete button
-                tr.querySelector(".delete-btn").addEventListener("click", () => deleteItem(item._id));
+/* LOAD ITEMS */
 
-                // Auto-update on input change
-                ["item-name", "item-desc", "item-stock", "item-price"].forEach(cls => {
-                    tr.querySelector(`.${cls}`).addEventListener("change", () => {
-                        const name = tr.querySelector(".item-name").value;
-                        const description = tr.querySelector(".item-desc").value;
-                        const stock = parseInt(tr.querySelector(".item-stock").value);
-                        const price = parseFloat(tr.querySelector(".item-price").value);
-                        updateItem(item._id, name, description, stock, price);
-                    });
-                });
+async function loadItems(){
 
-                tbody.appendChild(tr);
-            });
-        } catch (err) {
-            console.error("Error loading items:", err);
-        }
-    }
+const res=await fetch("/api/items",{credentials:"include"});
+const items=await res.json();
 
-    // =========================
-    // ADD ITEM
-    // =========================
-    async function addItem() {
-    const name = document.getElementById("itemName").value;
-    const description = document.getElementById("itemDescription").value;
-    const stock = document.getElementById("itemStock").value;
-    const price = document.getElementById("itemPrice").value;
-    const imageFile = document.getElementById("itemImage").files[0];
+const grid=document.getElementById("itemsGrid");
+const outGrid=document.getElementById("outOfStockGrid");
 
-    if (!name || !stock || !price) {
-        alert("Name, Stock, and Price are required!");
-        return;
-    }
+grid.innerHTML="";
+outGrid.innerHTML="";
 
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("description", description);
-    formData.append("stock", stock);
-    formData.append("price", price);
-    if (imageFile) formData.append("image", imageFile);
+items.forEach(item=>{
 
-    try {
-        const res = await fetch("/api/items", {
-            method: "POST",
-            body: formData,
-            credentials: "include"
-        });
+const card=document.createElement("div");
+card.className="item-card";
 
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Failed to add item");
+card.innerHTML=`
+<img src="${item.image || 'no-image.png'}">
+<h4>${item.name}</h4>
+<p>${item.description || ""}</p>
+<p>Stock: ${item.stock}</p>
+<p>₱${item.price}</p>
 
-        alert("Item added successfully!");
-        loadItems(); // refresh item table
-    } catch (err) {
-        console.error(err);
-        alert("Error: " + err.message);
-    }
+<div class="item-actions">
+<button class="delete-btn" onclick="deleteItem('${item._id}')">Delete</button>
+</div>
+`;
+
+if(item.stock>0){
+grid.appendChild(card);
+}else{
+outGrid.appendChild(card);
 }
 
-    // =========================
-    // DELETE ITEM
-    // =========================
-    async function deleteItem(id) {
-        if (!confirm("Delete this item?")) return;
-        await fetch(`/api/items/${id}`, { method: "DELETE", credentials: "include" });
-        loadItems();
-    }
-
-    // =========================
-    // UPDATE ITEM
-    // =========================
-    async function updateItem(id, name, description, stock, price) {
-        await fetch(`/api/items/${id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, description, stock, price }),
-            credentials: "include"
-        });
-    }
-
-    // =========================
-    // INITIALIZE
-    // =========================
-    document.getElementById("addItemBtn").addEventListener("click", addItem);
-    loadItems();
 });
+
+}
+
+/* ADD ITEM */
+
+async function addItem(){
+
+const name=document.getElementById("name").value;
+const description=document.getElementById("description").value;
+const stock=document.getElementById("stock").value;
+const price=document.getElementById("price").value;
+const imageFile=document.getElementById("imageInput").files[0];
+
+if(!name || !stock || !price){
+alert("Name, Stock and Price required");
+return;
+}
+
+const formData=new FormData();
+
+formData.append("name",name);
+formData.append("description",description);
+formData.append("stock",stock);
+formData.append("price",price);
+
+if(imageFile){
+formData.append("image",imageFile);
+}
+
+await fetch("/api/items",{
+method:"POST",
+body:formData,
+credentials:"include"
+});
+
+loadItems();
+
+}
+
+/* DELETE */
+
+async function deleteItem(id){
+
+if(!confirm("Delete this item?")) return;
+
+await fetch(`/api/items/${id}`,{
+method:"DELETE",
+credentials:"include"
+});
+
+loadItems();
+
+}
+
+/* INIT */
+
+loadItems();
+
 </script>
 
 </body>

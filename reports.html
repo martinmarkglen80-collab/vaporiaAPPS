@@ -6,228 +6,363 @@
 <title>Reports - Vaporia</title>
 
 <style>
+
+/* BODY */
+
 body{
-    margin:0;
-    font-family:'Segoe UI',sans-serif;
-    background:#d8c4ad;
-    position:relative;
+margin:0;
+font-family:'Segoe UI',sans-serif;
+background:#d8c4ad;
+position:relative;
 }
+
 body::before{
-    content:"";
-    position:fixed;
-    width:100%;
-    height:100%;
-    background:url('vaporia.jpg');
-    background-size:400px auto;
-    background-position:center;
-    opacity:0.25;
-    z-index:-1;
+content:"";
+position:fixed;
+width:100%;
+height:100%;
+background:url('vaporia.jpg');
+background-size:400px auto;
+background-position:center;
+opacity:0.25;
+z-index:-1;
 }
+
+/* TOPBAR */
+
 .topbar{
-    padding:15px;
-    background:rgba(193,168,142,0.9);
-    display:flex;
-    align-items:center;
+padding:15px;
+background:rgba(193,168,142,0.9);
+display:flex;
+align-items:center;
 }
+
 .menu-btn{
-    font-size:26px;
-    cursor:pointer;
-    margin-right:20px;
+font-size:26px;
+cursor:pointer;
+margin-right:20px;
 }
+
+/* SIDEBAR */
+
 .sidebar{
-    position:fixed;
-    left:-250px;
-    top:0;
-    width:250px;
-    height:100%;
-    background:rgba(168,146,120,0.95);
-    padding-top:60px;
-    transition:0.3s;
-    z-index:9999;
+position:fixed;
+left:-250px;
+top:0;
+width:250px;
+height:100%;
+background:rgba(168,146,120,0.95);
+padding-top:60px;
+transition:0.3s;
+z-index:9999;
 }
+
 .sidebar a{
-    display:block;
-    padding:15px;
-    text-decoration:none;
-    color:#4b3a2a;
-    font-size:18px;
+display:block;
+padding:15px;
+text-decoration:none;
+color:#4b3a2a;
+font-size:18px;
 }
+
 .sidebar a:hover{
-    background:rgba(143,123,101,0.9);
-    color:white;
+background:rgba(143,123,101,0.9);
+color:white;
 }
-.sidebar.active{ left:0; }
-.main{ padding:30px; position:relative; }
+
+.sidebar.active{
+left:0;
+}
+
+/* MAIN */
+
+.main{
+padding:30px;
+position:relative;
+}
+
+/* ADD SECTION */
+
 .add-section{
-    background:rgba(200,180,150,0.95);
-    padding:20px;
-    border-radius:12px;
-    margin-bottom:20px;
-    display:flex;
-    flex-wrap:wrap;
-    gap:10px;
-    align-items:center;
+background:rgba(200,180,150,0.95);
+padding:20px;
+border-radius:12px;
+margin-bottom:20px;
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+align-items:center;
 }
+
 .add-section input{
-    padding:8px;
-    border-radius:5px;
-    border:1px solid #a88a78;
+padding:8px;
+border-radius:5px;
+border:1px solid #a88a78;
 }
+
 .add-section button{
-    padding:8px 15px;
-    background:#4b3a2a;
-    color:white;
-    border:none;
-    border-radius:5px;
-    cursor:pointer;
+padding:8px 15px;
+background:#4b3a2a;
+color:white;
+border:none;
+border-radius:5px;
+cursor:pointer;
 }
-.add-section button:hover{ background:#2e1f13; }
+
+.add-section button:hover{
+background:#2e1f13;
+}
+
+/* TABLE */
+
 table{
-    width:100%;
-    border-collapse:collapse;
-    background:#d8c4ad;
+width:100%;
+border-collapse:collapse;
+background:#d8c4ad;
 }
+
 th,td{
-    border:2px solid #6b5a48;
-    padding:10px;
-    text-align:center;
+border:2px solid #6b5a48;
+padding:10px;
+text-align:center;
 }
-th{ background:#b9a68d; }
+
+th{
+background:#b9a68d;
+}
+
 .delete-btn{
-    background:#c0392b;
-    color:white;
-    padding:5px 10px;
-    border:none;
-    border-radius:4px;
-    cursor:pointer;
+background:#c0392b;
+color:white;
+padding:5px 10px;
+border:none;
+border-radius:4px;
+cursor:pointer;
 }
-.delete-btn:hover{ background:#7b241c; }
+
+.delete-btn:hover{
+background:#7b241c;
+}
+
+.report-name{
+width:90%;
+padding:4px;
+border-radius:4px;
+border:1px solid #a88a78;
+}
+
 </style>
 </head>
 
 <body>
 
+<!-- TOPBAR -->
+
 <div class="topbar">
-    <div class="menu-btn">☰</div>
-    <h2>Reports</h2>
+<div class="menu-btn">☰</div>
+<h2>Reports</h2>
 </div>
+
+<!-- SIDEBAR -->
 
 <div class="sidebar" id="sidebar">
-    <a href="dashboard.html">Dashboard</a>
-    <a href="items.html">Items</a>
-    <a href="sales.html">Sales</a>
-    <a href="reports.html">Reports</a>
-    <a href="suppliers.html">Suppliers</a>
-    <a href="#" id="logoutBtn">Logout</a>
+<a href="dashboard.html">Dashboard</a>
+<a href="items.html">Items</a>
+<a href="sales.html">Sales</a>
+<a href="reports.html">Reports</a>
+<a href="suppliers.html">Suppliers</a>
+<a href="#" id="logoutBtn">Logout</a>
 </div>
 
-<div class="main">
-    <div class="add-section">
-        <input type="text" id="reportName" placeholder="Report Name">
-        <button onclick="addReport()">Add Report</button>
-    </div>
+<!-- MAIN -->
 
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Report Name</th>
-                <th>Report Date</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody id="reportsTable"></tbody>
-    </table>
+<div class="main">
+
+<div class="add-section">
+<input type="text" id="reportName" placeholder="Report Name">
+<button onclick="addReport()">Add Report</button>
+</div>
+
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Report Name</th>
+<th>Report Date</th>
+<th>Actions</th>
+</tr>
+</thead>
+
+<tbody id="reportsTable"></tbody>
+
+</table>
+
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-    const tbody = document.getElementById("reportsTable");
 
-    // =========================
-    // LOAD REPORTS
-    // =========================
-    async function loadReports() {
-        try {
-            const res = await fetch("/api/reports", { credentials: "include" });
-            if (!res.ok) throw new Error("Failed to fetch reports");
-            const reports = await res.json();
+document.addEventListener("DOMContentLoaded",()=>{
 
-            tbody.innerHTML = "";
-            reports.forEach(r => {
-                const tr = document.createElement("tr");
-                const date = new Date(r.date).toLocaleDateString();
-                tr.innerHTML = `
-                    <td>${r._id}</td>
-                    <td><input type="text" value="${r.name}" class="report-name"></td>
-                    <td>${date}</td>
-                    <td><button class="delete-btn">Delete</button></td>
-                `;
+const tbody=document.getElementById("reportsTable");
+const sidebar=document.getElementById("sidebar");
+const menuBtn=document.querySelector(".menu-btn");
+const logoutBtn=document.getElementById("logoutBtn");
 
-                // Delete button
-                tr.querySelector(".delete-btn").addEventListener("click", () => deleteReport(r._id));
+/* SIDEBAR */
 
-                // Auto-update on input change
-                tr.querySelector(".report-name").addEventListener("change", () => {
-                    const name = tr.querySelector(".report-name").value;
-                    updateReport(r._id, name);
-                });
-
-                tbody.appendChild(tr);
-            });
-        } catch (err) {
-            console.error("Error loading reports:", err);
-        }
-    }
-
-    // =========================
-    // ADD REPORT
-    // =========================
-    async function addReport() {
-        const name = document.getElementById("reportName").value.trim();
-        if (!name) {
-            alert("Report name required");
-            return;
-        }
-
-        await fetch("/api/reports", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name }),
-            credentials: "include"
-        });
-
-        document.getElementById("reportName").value = "";
-        loadReports();
-    }
-
-    // =========================
-    // UPDATE REPORT
-    // =========================
-    async function updateReport(id, name) {
-        await fetch(`/api/reports/${id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name }),
-            credentials: "include"
-        });
-    }
-
-    // =========================
-    // DELETE REPORT
-    // =========================
-    async function deleteReport(id) {
-        if (!confirm("Delete this report?")) return;
-        await fetch(`/api/reports/${id}`, { method: "DELETE", credentials: "include" });
-        loadReports();
-    }
-
-    // =========================
-    // INITIALIZE
-    // =========================
-    document.getElementById("addReportBtn").addEventListener("click", addReport);
-    loadReports();
+menuBtn.addEventListener("click",e=>{
+e.stopPropagation();
+sidebar.classList.toggle("active");
 });
+
+document.addEventListener("click",e=>{
+if(!sidebar.contains(e.target)&&!menuBtn.contains(e.target)){
+sidebar.classList.remove("active");
+}
+});
+
+/* LOGOUT */
+
+logoutBtn.addEventListener("click",async e=>{
+e.preventDefault();
+
+await fetch("/logout",{
+method:"POST",
+credentials:"include"
+});
+
+window.location.replace("login.html");
+});
+
+/* LOAD REPORTS */
+
+async function loadReports(){
+
+try{
+
+const res=await fetch("/api/reports",{credentials:"include"});
+if(!res.ok) throw new Error("Failed to fetch");
+
+const reports=await res.json();
+
+tbody.innerHTML="";
+
+reports.forEach(r=>{
+
+const tr=document.createElement("tr");
+
+const date=new Date(r.date).toLocaleDateString();
+
+tr.innerHTML=`
+<td>${r._id}</td>
+<td><input type="text" value="${r.name}" class="report-name"></td>
+<td>${date}</td>
+<td><button class="delete-btn">Delete</button></td>
+`;
+
+tr.querySelector(".delete-btn").addEventListener("click",()=>{
+deleteReport(r._id);
+});
+
+tr.querySelector(".report-name").addEventListener("change",()=>{
+
+const name=tr.querySelector(".report-name").value.trim();
+
+updateReport(r._id,name);
+
+});
+
+tbody.appendChild(tr);
+
+});
+
+}catch(err){
+console.error("Error loading reports:",err);
+}
+
+}
+
+/* ADD REPORT */
+
+async function addReport(){
+
+const name=document.getElementById("reportName").value.trim();
+
+if(!name){
+alert("Report name required");
+return;
+}
+
+await fetch("/api/reports",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({name}),
+
+credentials:"include"
+
+});
+
+document.getElementById("reportName").value="";
+
+loadReports();
+
+}
+
+/* UPDATE */
+
+async function updateReport(id,name){
+
+if(!name) return;
+
+await fetch(`/api/reports/${id}`,{
+
+method:"PUT",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({name}),
+
+credentials:"include"
+
+});
+
+}
+
+/* DELETE */
+
+async function deleteReport(id){
+
+if(!confirm("Delete this report?")) return;
+
+await fetch(`/api/reports/${id}`,{
+
+method:"DELETE",
+credentials:"include"
+
+});
+
+loadReports();
+
+}
+
+/* INITIAL LOAD */
+
+loadReports();
+
+/* MAKE BUTTON WORK */
+
+window.addReport=addReport;
+
+});
+
 </script>
+
 </body>
 </html>
