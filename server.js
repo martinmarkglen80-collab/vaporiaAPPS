@@ -27,8 +27,8 @@ app.use("/uploads", express.static("uploads"));
    MONGODB CONNECTION
 ========================= */
 mongoose.connect(process.env.MONGO_URI)
-.then(() => console.log("✅ MongoDB Connected"))
-.catch(err => console.log("❌ MongoDB Error:", err));
+  .then(() => console.log("✅ MongoDB Connected"))
+  .catch(err => console.log("❌ MongoDB Error:", err));
 
 /* =========================
    MULTER IMAGE UPLOAD
@@ -40,46 +40,65 @@ const storage = multer.diskStorage({
     cb(null, dir);
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
+    cb(null, `${Date.now()}-${file.originalname}`);
   }
 });
-
 const upload = multer({ storage });
 
 /* =========================
    SCHEMAS
 ========================= */
+const counterSchema = new mongoose.Schema({
+  _id: String,
+  seq: Number
+});
+const Counter = mongoose.model("Counter", counterSchema);
+
+async function getNextSequence(name) {
+  const doc = await Counter.findByIdAndUpdate(
+    name,
+    { $inc: { seq: 1 } },
+    { upsert: true, new: true }
+  );
+  return doc.seq;
+}
+
 const userSchema = new mongoose.Schema({
   username: String,
   email: String,
   password: String
-},{ timestamps: true });
+});
 
 const itemSchema = new mongoose.Schema({
+  _id: Number,
   name: String,
   description: String,
-  stock: Number,
-  price: Number,
+  stock: { type: Number, default: 0 },
+  price: { type: Number, default: 0 },
   image: String
-},{ timestamps: true });
+});
 
 const supplierSchema = new mongoose.Schema({
+  _id: Number,
   name: String,
   contact: String
-},{ timestamps: true });
+});
 
 const saleSchema = new mongoose.Schema({
-  item: { type: mongoose.Schema.Types.ObjectId, ref: "Item" },
+  _id: Number,
+  item: { type: Number, ref: "Item" },
+  itemName: String,
   quantity: Number,
   price: Number,
   total: Number,
   date: { type: Date, default: Date.now }
-},{ timestamps: true });
+});
 
 const reportSchema = new mongoose.Schema({
+  _id: Number,
   name: String,
   date: { type: Date, default: Date.now }
-},{ timestamps: true });
+});
 
 /* =========================
    MODELS
@@ -95,9 +114,7 @@ const Report = mongoose.model("Report", reportSchema);
 ========================= */
 function auth(req, res, next) {
   const token = req.cookies.token;
-
   if (!token) return res.status(401).json({ message: "Unauthorized" });
-
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
@@ -110,52 +127,23 @@ function auth(req, res, next) {
 /* =========================
    AUTH ROUTES
 ========================= */
-
 app.post("/register", async (req, res) => {
-
   const { username, email, password } = req.body;
-
-  const existing = await User.findOne({ username });
-  if (existing) return res.status(400).json({ message: "User exists" });
-
+  if (await User.findOne({ username })) return res.status(400).json({ message: "User exists" });
   const hashed = await bcrypt.hash(password, 10);
-
-  const user = new User({
-    username,
-    email,
-    password: hashed
-  });
-
-  await user.save();
-
+  await new User({ username, email, password: hashed }).save();
   res.json({ message: "Account created" });
-
 });
 
 app.post("/login", async (req, res) => {
-
   const { username, password } = req.body;
-
   const user = await User.findOne({ username });
-  if (!user) return res.status(401).json({ message: "Invalid login" });
+  if (!user || !(await bcrypt.compare(password, user.password)))
+    return res.status(401).json({ message: "Invalid login" });
 
-  const match = await bcrypt.compare(password, user.password);
-  if (!match) return res.status(401).json({ message: "Invalid login" });
-
-  const token = jwt.sign(
-    { id: user._id, username: user.username },
-    process.env.JWT_SECRET,
-    { expiresIn: "7d" }
-  );
-
-  res.cookie("token", token, {
-    httpOnly: true,
-    sameSite: "lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000
-  });
-
+  const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, { expiresIn: "7d" });
+  res.cookie("token", token, { httpOnly: true, sameSite: "lax", maxAge: 7*24*60*60*1000 });
   res.json({ message: "Login successful" });
-
 });
 
 app.post("/logout", (req, res) => {
@@ -166,246 +154,143 @@ app.post("/logout", (req, res) => {
 /* =========================
    ITEMS API
 ========================= */
-
 app.get("/api/items", auth, async (req, res) => {
   const items = await Item.find();
   res.json(items);
 });
 
 app.post("/api/items", auth, upload.single("image"), async (req, res) => {
-
   const { name, description, stock, price } = req.body;
-
   const image = req.file ? `/uploads/${req.file.filename}` : "";
-
-  const item = new Item({
-    name,
-    description,
-    stock,
-    price,
-    image
-  });
-
+  const _id = await getNextSequence("items");
+  const item = new Item({ _id, name, description, stock, price, image });
   await item.save();
-
   res.json(item);
-
 });
 
 app.put("/api/items/:id", auth, upload.single("image"), async (req, res) => {
-
+  const id = Number(req.params.id);
   const { name, description, stock, price } = req.body;
-
   const update = { name, description, stock, price };
-
   if (req.file) update.image = `/uploads/${req.file.filename}`;
 
-  const item = await Item.findByIdAndUpdate(
-    req.params.id,
-    update,
-    { new: true }
-  );
-
+  const item = await Item.findByIdAndUpdate(id, update, { new: true });
+  if (!item) return res.status(404).json({ message: "Item not found" });
   res.json(item);
-
 });
 
 app.delete("/api/items/:id", auth, async (req, res) => {
-
-  await Item.findByIdAndDelete(req.params.id);
-
+  const id = Number(req.params.id);
+  const item = await Item.findByIdAndDelete(id);
+  if (!item) return res.status(404).json({ message: "Item not found" });
   res.json({ message: "Item deleted" });
+});
 
+/* =========================
+   SALES API
+========================= */
+app.get("/api/sales", auth, async (req, res) => {
+  const sales = await Sale.find();
+  res.json(sales);
+});
+
+app.post("/api/sales", auth, async (req, res) => {
+  const { item: itemId, quantity } = req.body;
+  const id = Number(itemId);
+  const item = await Item.findById(id);
+  if (!item) return res.status(400).json({ message: "Item not found" });
+  if (item.stock < quantity) return res.status(400).json({ message: "Insufficient stock" });
+
+  const total = quantity * item.price; // use item.price for consistency
+  item.stock -= quantity;
+  await item.save();
+
+  const _id = await getNextSequence("sales");
+  const sale = new Sale({ _id, item: item._id, itemName: item.name, quantity, price: item.price, total });
+  await sale.save();
+
+  res.json(sale);
+});
+
+app.delete("/api/sales/:id", auth, async (req, res) => {
+  const id = Number(req.params.id);
+  const sale = await Sale.findById(id);
+  if (!sale) return res.status(404).json({ message: "Sale not found" });
+
+  const item = await Item.findById(sale.item);
+  if (item) {
+    item.stock += sale.quantity; // revert stock
+    await item.save();
+  }
+
+  await Sale.findByIdAndDelete(id);
+  res.json({ message: "Sale deleted" });
 });
 
 /* =========================
    SUPPLIERS API
 ========================= */
-
 app.get("/api/suppliers", auth, async (req, res) => {
   const suppliers = await Supplier.find();
   res.json(suppliers);
 });
 
 app.post("/api/suppliers", auth, async (req, res) => {
-
   const { name, contact } = req.body;
-
-  const supplier = new Supplier({ name, contact });
-
+  const _id = await getNextSequence("suppliers");
+  const supplier = new Supplier({ _id, name, contact });
   await supplier.save();
-
   res.json(supplier);
-
 });
 
 app.put("/api/suppliers/:id", auth, async (req, res) => {
-
+  const id = Number(req.params.id);
   const { name, contact } = req.body;
-
-  const supplier = await Supplier.findByIdAndUpdate(
-    req.params.id,
-    { name, contact },
-    { new: true }
-  );
-
+  const supplier = await Supplier.findByIdAndUpdate(id, { name, contact }, { new: true });
+  if (!supplier) return res.status(404).json({ message: "Supplier not found" });
   res.json(supplier);
-
 });
 
 app.delete("/api/suppliers/:id", auth, async (req, res) => {
-
-  await Supplier.findByIdAndDelete(req.params.id);
-
+  const id = Number(req.params.id);
+  const supplier = await Supplier.findByIdAndDelete(id);
+  if (!supplier) return res.status(404).json({ message: "Supplier not found" });
   res.json({ message: "Supplier deleted" });
-
-});
-
-/* =========================
-   SALES API
-========================= */
-
-// Get all sales
-app.get("/api/sales", auth, async (req, res) => {
-  const sales = await Sale.find().populate("item", "name price");
-  // Map sales to include item name for frontend
-  const formatted = sales.map(s => ({
-    _id: s._id,
-    itemId: s.item._id,
-    itemName: s.item.name,
-    price: s.price,
-    quantity: s.quantity,
-    total: s.total,
-    date: s.date
-  }));
-  res.json(formatted);
-});
-
-// Add new sale and deduct item stock
-app.post("/api/sales", auth, async (req, res) => {
-  const { itemId, quantity, price } = req.body;
-
-  if (!itemId || !quantity || !price)
-    return res.status(400).json({ message: "All fields required" });
-
-  const item = await Item.findById(itemId);
-  if (!item) return res.status(404).json({ message: "Item not found" });
-
-  if (item.stock < quantity)
-    return res.status(400).json({ message: "Not enough stock" });
-
-  const total = price * quantity;
-
-  const sale = new Sale({
-    item: item._id,
-    quantity,
-    price,
-    total
-  });
-
-  await sale.save();
-
-  // Deduct stock
-  item.stock -= quantity;
-  await item.save();
-
-  res.json({ message: "Sale added and stock updated" });
-});
-
-// Delete sale (optional: restore stock if desired)
-app.delete("/api/sales/:id", auth, async (req, res) => {
-  const sale = await Sale.findById(req.params.id);
-  if (!sale) return res.status(404).json({ message: "Sale not found" });
-
-  // Restore item stock
-  const item = await Item.findById(sale.item);
-  if (item) {
-    item.stock += sale.quantity;
-    await item.save();
-  }
-
-  await Sale.findByIdAndDelete(req.params.id);
-  res.json({ message: "Sale deleted and stock restored" });
 });
 
 /* =========================
    REPORTS API
 ========================= */
-
 app.get("/api/reports", auth, async (req, res) => {
   const reports = await Report.find();
   res.json(reports);
 });
 
 app.post("/api/reports", auth, async (req, res) => {
-
   const { name } = req.body;
-
-  const report = new Report({ name });
-
+  const _id = await getNextSequence("reports");
+  const report = new Report({ _id, name });
   await report.save();
-
   res.json(report);
-
 });
 
 app.put("/api/reports/:id", auth, async (req, res) => {
-
+  const id = Number(req.params.id);
   const { name } = req.body;
-
-  const report = await Report.findByIdAndUpdate(
-    req.params.id,
-    { name },
-    { new: true }
-  );
-
+  const report = await Report.findByIdAndUpdate(id, { name }, { new: true });
+  if (!report) return res.status(404).json({ message: "Report not found" });
   res.json(report);
-
 });
 
 app.delete("/api/reports/:id", auth, async (req, res) => {
-
-  await Report.findByIdAndDelete(req.params.id);
-
+  const id = Number(req.params.id);
+  const report = await Report.findByIdAndDelete(id);
+  if (!report) return res.status(404).json({ message: "Report not found" });
   res.json({ message: "Report deleted" });
-
-});
-
-/* =========================
-   DASHBOARD DATA
-========================= */
-
-app.get("/api/dashboard", auth, async (req, res) => {
-
-  const totalItems = await Item.countDocuments();
-  const availableItems = await Item.countDocuments({ stock: { $gt: 0 } });
-  const outOfStock = await Item.countDocuments({ stock: { $lte: 0 } });
-  const totalSales = await Sale.countDocuments();
-
-  const totalRevenueAgg = await Sale.aggregate([
-    { $group: { _id: null, total: { $sum: "$total" } } }
-  ]);
-
-  const totalRevenue = totalRevenueAgg[0]
-    ? totalRevenueAgg[0].total
-    : 0;
-
-  res.json({
-    totalItems,
-    availableItems,
-    outOfStock,
-    totalSales,
-    totalRevenue
-  });
-
 });
 
 /* =========================
    START SERVER
 ========================= */
-
 const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

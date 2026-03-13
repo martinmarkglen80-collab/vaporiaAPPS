@@ -200,168 +200,112 @@ background:#7b241c;
 </div>
 
 <script>
+document.addEventListener("DOMContentLoaded", () => {
 
-document.addEventListener("DOMContentLoaded",()=>{
+  const tbody = document.getElementById("suppliersTable");
+  const sidebar = document.getElementById("sidebar");
+  const menuBtn = document.querySelector(".menu-btn");
+  const logoutBtn = document.getElementById("logoutBtn");
 
-const tbody=document.getElementById("suppliersTable");
-const sidebar=document.getElementById("sidebar");
-const menuBtn=document.querySelector(".menu-btn");
-const logoutBtn=document.getElementById("logoutBtn");
+  /* SIDEBAR TOGGLE */
+  menuBtn.addEventListener("click", e => {
+    e.stopPropagation();
+    sidebar.classList.toggle("active");
+  });
 
-/* SIDEBAR */
+  document.addEventListener("click", e => {
+    if (!sidebar.contains(e.target) && !menuBtn.contains(e.target)) {
+      sidebar.classList.remove("active");
+    }
+  });
 
-menuBtn.addEventListener("click",e=>{
-e.stopPropagation();
-sidebar.classList.toggle("active");
+  /* LOGOUT */
+  logoutBtn.addEventListener("click", async e => {
+    e.preventDefault();
+    await fetch("/logout", { method: "POST", credentials: "include" });
+    window.location.replace("login.html");
+  });
+
+  /* LOAD SUPPLIERS */
+  async function loadSuppliers() {
+    try {
+      const res = await fetch("/api/suppliers", { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch suppliers");
+      const suppliers = await res.json();
+
+      tbody.innerHTML = "";
+
+      suppliers.forEach(s => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${s._id}</td>
+          <td><input type="text" value="${s.name}" class="supplier-name"></td>
+          <td><input type="text" value="${s.contact}" class="supplier-contact"></td>
+          <td><button class="delete-btn">Delete</button></td>
+        `;
+
+        // DELETE
+        tr.querySelector(".delete-btn").addEventListener("click", async () => {
+          if (!confirm("Delete this supplier?")) return;
+          await fetch(`/api/suppliers/${s._id}`, {
+            method: "DELETE",
+            credentials: "include"
+          });
+          loadSuppliers();
+        });
+
+        // UPDATE NAME OR CONTACT
+        ["supplier-name", "supplier-contact"].forEach(cls => {
+          tr.querySelector(`.${cls}`).addEventListener("change", async () => {
+            const name = tr.querySelector(".supplier-name").value.trim();
+            const contact = tr.querySelector(".supplier-contact").value.trim();
+            if (!name) return;
+            await fetch(`/api/suppliers/${s._id}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ name, contact }),
+              credentials: "include"
+            });
+          });
+        });
+
+        tbody.appendChild(tr);
+      });
+
+    } catch (err) {
+      console.error("Error loading suppliers:", err);
+    }
+  }
+
+  /* ADD SUPPLIER */
+  async function addSupplier() {
+    const name = document.getElementById("supplierName").value.trim();
+    const contact = document.getElementById("supplierContact").value.trim();
+
+    if (!name) {
+      alert("Supplier name required");
+      return;
+    }
+
+    await fetch("/api/suppliers", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ name, contact })
+    });
+
+    document.getElementById("supplierName").value = "";
+    document.getElementById("supplierContact").value = "";
+
+    loadSuppliers();
+  }
+
+  // Expose addSupplier to button onclick
+  window.addSupplier = addSupplier;
+
+  // INITIAL LOAD
+  loadSuppliers();
 });
-
-document.addEventListener("click",e=>{
-if(!sidebar.contains(e.target)&&!menuBtn.contains(e.target)){
-sidebar.classList.remove("active");
-}
-});
-
-/* LOGOUT */
-
-logoutBtn.addEventListener("click",async e=>{
-
-e.preventDefault();
-
-await fetch("/logout",{
-method:"POST",
-credentials:"include"
-});
-
-window.location.replace("login.html");
-
-});
-
-/* LOAD SUPPLIERS */
-
-async function loadSuppliers(){
-
-const res=await fetch("/api/suppliers",{credentials:"include"});
-const suppliers=await res.json();
-
-tbody.innerHTML="";
-
-suppliers.forEach(s=>{
-
-const tr=document.createElement("tr");
-
-tr.innerHTML=`
-<td>${s._id}</td>
-<td><input type="text" value="${s.name}" class="supplier-name"></td>
-<td><input type="text" value="${s.contact}" class="supplier-contact"></td>
-<td><button class="delete-btn">Delete</button></td>
-`;
-
-tr.querySelector(".delete-btn").addEventListener("click",()=>{
-deleteSupplier(s._id);
-});
-
-tr.querySelector(".supplier-name").addEventListener("change",()=>{
-
-const name=tr.querySelector(".supplier-name").value;
-const contact=tr.querySelector(".supplier-contact").value;
-
-updateSupplier(s._id,name,contact);
-
-});
-
-tr.querySelector(".supplier-contact").addEventListener("change",()=>{
-
-const name=tr.querySelector(".supplier-name").value;
-const contact=tr.querySelector(".supplier-contact").value;
-
-updateSupplier(s._id,name,contact);
-
-});
-
-tbody.appendChild(tr);
-
-});
-
-}
-
-/* ADD SUPPLIER */
-
-async function addSupplier(){
-
-const name=document.getElementById("supplierName").value.trim();
-const contact=document.getElementById("supplierContact").value.trim();
-
-if(!name){
-alert("Supplier name required");
-return;
-}
-
-await fetch("/api/suppliers",{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-credentials:"include",
-
-body:JSON.stringify({name,contact})
-
-});
-
-document.getElementById("supplierName").value="";
-document.getElementById("supplierContact").value="";
-
-loadSuppliers();
-
-}
-
-/* UPDATE */
-
-async function updateSupplier(id,name,contact){
-
-await fetch(`/api/suppliers/${id}`,{
-
-method:"PUT",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-credentials:"include",
-
-body:JSON.stringify({name,contact})
-
-});
-
-}
-
-/* DELETE */
-
-async function deleteSupplier(id){
-
-if(!confirm("Delete this supplier?")) return;
-
-await fetch(`/api/suppliers/${id}`,{
-
-method:"DELETE",
-credentials:"include"
-
-});
-
-loadSuppliers();
-
-}
-
-/* INIT */
-
-loadSuppliers();
-
-window.addSupplier=addSupplier;
-
-});
-
 </script>
 
 </body>

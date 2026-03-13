@@ -283,111 +283,116 @@ border:1px solid #a88a78;
 </div>
 
 <script>
+const itemsGrid = document.getElementById("itemsGrid");
+const outOfStockGrid = document.getElementById("outOfStockGrid");
 
-/* SIDEBAR */
+const nameInput = document.getElementById("name");
+const descriptionInput = document.getElementById("description");
+const stockInput = document.getElementById("stock");
+const priceInput = document.getElementById("price");
+const imageInput = document.getElementById("imageInput");
 
-const menuBtn=document.getElementById("menuBtn");
-const sidebar=document.getElementById("sidebar");
+// =========================
+// LOAD ITEMS
+// =========================
+async function loadItems() {
+    const res = await fetch("/api/items", { credentials: "include" });
+    const items = await res.json();
 
-menuBtn.onclick=()=>{
-sidebar.classList.toggle("active");
-};
+    itemsGrid.innerHTML = "";
+    outOfStockGrid.innerHTML = "";
 
-/* LOAD ITEMS */
+    items.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "item-card";
 
-async function loadItems(){
+        card.innerHTML = `
+            <img src="${item.image || 'no-image.png'}">
+            <h4>${item.name}</h4>
+            <p>${item.description || ""}</p>
+            <p><b>Stock:</b> ${item.stock}</p>
+            <p><b>Price:</b> $${item.price}</p>
+            <div class="item-actions">
+                <button class="edit-btn">Edit</button>
+                <button class="delete-btn">Delete</button>
+            </div>
+        `;
 
-const res=await fetch("/api/items",{credentials:"include"});
-const items=await res.json();
+        // DELETE
+        card.querySelector(".delete-btn").addEventListener("click", async () => {
+            if (confirm("Delete this item?")) {
+                await fetch(`/api/items/${item._id}`, { method: "DELETE", credentials: "include" });
+                loadItems();
+            }
+        });
 
-const grid=document.getElementById("itemsGrid");
-const outGrid=document.getElementById("outOfStockGrid");
+        // EDIT
+        card.querySelector(".edit-btn").addEventListener("click", async () => {
+            const newName = prompt("Item Name:", item.name);
+            const newDesc = prompt("Description:", item.description);
+            const newStock = prompt("Stock:", item.stock);
+            const newPrice = prompt("Price:", item.price);
 
-grid.innerHTML="";
-outGrid.innerHTML="";
+            if (newName && newStock && newPrice) {
+                const formData = new FormData();
+                formData.append("name", newName);
+                formData.append("description", newDesc || "");
+                formData.append("stock", Number(newStock));
+                formData.append("price", Number(newPrice));
 
-items.forEach(item=>{
+                await fetch(`/api/items/${item._id}`, {
+                    method: "PUT",
+                    body: formData,
+                    credentials: "include"
+                });
+                loadItems();
+            }
+        });
 
-const card=document.createElement("div");
-card.className="item-card";
-
-card.innerHTML=`
-<img src="${item.image || 'no-image.png'}">
-<h4>${item.name}</h4>
-<p>${item.description || ""}</p>
-<p>Stock: ${item.stock}</p>
-<p>₱${item.price}</p>
-
-<div class="item-actions">
-<button class="delete-btn" onclick="deleteItem('${item._id}')">Delete</button>
-</div>
-`;
-
-if(item.stock>0){
-grid.appendChild(card);
-}else{
-outGrid.appendChild(card);
+        // OUT OF STOCK
+        if (item.stock > 0) {
+            itemsGrid.appendChild(card);
+        } else {
+            outOfStockGrid.appendChild(card);
+        }
+    });
 }
 
-});
+// =========================
+// ADD ITEM
+// =========================
+async function addItem() {
+    if (!nameInput.value || !stockInput.value || !priceInput.value) {
+        alert("Name, Stock and Price are required");
+        return;
+    }
 
+    const formData = new FormData();
+    formData.append("name", nameInput.value);
+    formData.append("description", descriptionInput.value);
+    formData.append("stock", Number(stockInput.value));
+    formData.append("price", Number(priceInput.value));
+    if (imageInput.files[0]) formData.append("image", imageInput.files[0]);
+
+    await fetch("/api/items", {
+        method: "POST",
+        body: formData,
+        credentials: "include"
+    });
+
+    nameInput.value = "";
+    descriptionInput.value = "";
+    stockInput.value = "";
+    priceInput.value = "";
+    imageInput.value = "";
+
+    loadItems();
 }
 
-/* ADD ITEM */
-
-async function addItem(){
-
-const name=document.getElementById("name").value;
-const description=document.getElementById("description").value;
-const stock=document.getElementById("stock").value;
-const price=document.getElementById("price").value;
-const imageFile=document.getElementById("imageInput").files[0];
-
-if(!name || !stock || !price){
-alert("Name, Stock and Price required");
-return;
-}
-
-const formData=new FormData();
-
-formData.append("name",name);
-formData.append("description",description);
-formData.append("stock",stock);
-formData.append("price",price);
-
-if(imageFile){
-formData.append("image",imageFile);
-}
-
-await fetch("/api/items",{
-method:"POST",
-body:formData,
-credentials:"include"
-});
-
-loadItems();
-
-}
-
-/* DELETE */
-
-async function deleteItem(id){
-
-if(!confirm("Delete this item?")) return;
-
-await fetch(`/api/items/${id}`,{
-method:"DELETE",
-credentials:"include"
-});
-
-loadItems();
-
-}
-
-/* INIT */
-
-loadItems();
-
+// =========================
+// INITIAL LOAD
+// =========================
+document.addEventListener("DOMContentLoaded", loadItems);
 </script>
 
 </body>

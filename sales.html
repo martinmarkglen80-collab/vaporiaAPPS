@@ -212,176 +212,155 @@ background:#7b241c;
 </div>
 
 <script>
+document.addEventListener("DOMContentLoaded", () => {
+  const tbody = document.getElementById("salesTable");
 
-document.addEventListener("DOMContentLoaded",()=>{
+  const sidebar = document.getElementById("sidebar");
+  const menuBtn = document.querySelector(".menu-btn");
+  const logoutBtn = document.getElementById("logoutBtn");
 
-const tbody=document.getElementById("salesTable");
-const sidebar=document.getElementById("sidebar");
-const menuBtn=document.querySelector(".menu-btn");
-const logoutBtn=document.getElementById("logoutBtn");
+  const itemSelect = document.getElementById("itemSelect");
+  const quantityInput = document.getElementById("quantity");
+  const priceInput = document.getElementById("price");
 
-const itemSelect=document.getElementById("itemSelect");
-const quantityInput=document.getElementById("quantity");
-const priceInput=document.getElementById("price");
+  // =========================
+  // SIDEBAR TOGGLE
+  // =========================
+  menuBtn.addEventListener("click", e => {
+    e.stopPropagation();
+    sidebar.classList.toggle("active");
+  });
 
-/* SIDEBAR */
+  document.addEventListener("click", e => {
+    if (!sidebar.contains(e.target) && !menuBtn.contains(e.target)) {
+      sidebar.classList.remove("active");
+    }
+  });
 
-menuBtn.addEventListener("click",e=>{
-e.stopPropagation();
-sidebar.classList.toggle("active");
+  // =========================
+  // LOGOUT
+  // =========================
+  logoutBtn.addEventListener("click", async e => {
+    e.preventDefault();
+    await fetch("/logout", { method: "POST", credentials: "include" });
+    window.location.replace("login.html");
+  });
+
+  // =========================
+  // LOAD ITEMS
+  // =========================
+  async function loadItems() {
+    const res = await fetch("/api/items", { credentials: "include" });
+    const items = await res.json();
+
+    itemSelect.innerHTML = '<option value="">Select Item</option>';
+
+    items.forEach(i => {
+      const option = document.createElement("option");
+      option.value = i._id;
+      option.dataset.price = i.price;
+      option.dataset.stock = i.stock;
+      option.textContent = i.name;
+      itemSelect.appendChild(option);
+    });
+  }
+
+  // =========================
+  // AUTO PRICE & CHECK STOCK
+  // =========================
+  itemSelect.addEventListener("change", () => {
+    const selected = itemSelect.selectedOptions[0];
+    priceInput.value = selected ? selected.dataset.price : "";
+    quantityInput.max = selected ? selected.dataset.stock : "";
+  });
+
+  // =========================
+  // LOAD SALES
+  // =========================
+  async function loadSales() {
+    const res = await fetch("/api/sales", { credentials: "include" });
+    const sales = await res.json();
+
+    tbody.innerHTML = "";
+
+    sales.forEach(s => {
+      const tr = document.createElement("tr");
+      const date = new Date(s.date).toLocaleDateString();
+
+      tr.innerHTML = `
+        <td>${s._id}</td>
+        <td>${s.itemName}</td>
+        <td>${s.price}</td>
+        <td>${s.quantity}</td>
+        <td>${s.total}</td>
+        <td>${date}</td>
+        <td><button class="delete-btn">Delete</button></td>
+      `;
+
+      // DELETE SALE
+      tr.querySelector(".delete-btn").addEventListener("click", async () => {
+        if (confirm("Delete this sale?")) {
+          await fetch(`/api/sales/${s._id}`, { method: "DELETE", credentials: "include" });
+          loadSales();
+          loadItems();
+        }
+      });
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  // =========================
+  // ADD SALE
+  // =========================
+  async function addSale() {
+    const itemId = itemSelect.value;
+    const quantity = parseInt(quantityInput.value);
+    const price = parseFloat(priceInput.value);
+
+    if (!itemId || !quantity || !price) {
+      alert("Fill all fields");
+      return;
+    }
+
+    // Check if quantity exceeds stock
+    const selectedOption = itemSelect.selectedOptions[0];
+    const stock = parseInt(selectedOption.dataset.stock);
+    if (quantity > stock) {
+      alert("Quantity exceeds available stock");
+      return;
+    }
+
+    const total = quantity * price;
+
+    // POST sale
+    await fetch("/api/sales", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ item: itemId, quantity, price }),
+      credentials: "include"
+    });
+
+    // Stock is already updated by server in /api/sales, so no need to PUT manually
+
+    // Clear form
+    itemSelect.value = "";
+    quantityInput.value = "";
+    priceInput.value = "";
+
+    loadSales();
+    loadItems();
+  }
+
+  // Expose addSale to button onclick
+  window.addSale = addSale;
+
+  // =========================
+  // INITIAL LOAD
+  // =========================
+  loadItems();
+  loadSales();
 });
-
-document.addEventListener("click",e=>{
-if(!sidebar.contains(e.target)&&!menuBtn.contains(e.target)){
-sidebar.classList.remove("active");
-}
-});
-
-/* LOGOUT */
-
-logoutBtn.addEventListener("click",async e=>{
-e.preventDefault();
-
-await fetch("/logout",{
-method:"POST",
-credentials:"include"
-});
-
-window.location.replace("login.html");
-
-});
-
-/* LOAD ITEMS */
-
-async function loadItems(){
-
-const res=await fetch("/api/items",{credentials:"include"});
-const items=await res.json();
-
-itemSelect.innerHTML='<option value="">Select Item</option>';
-
-items.forEach(i=>{
-
-const option=document.createElement("option");
-
-option.value=i._id;
-option.dataset.price=i.price;
-option.textContent=i.name;
-
-itemSelect.appendChild(option);
-
-});
-
-}
-
-/* AUTO PRICE */
-
-itemSelect.addEventListener("change",()=>{
-
-const selected=itemSelect.selectedOptions[0];
-
-priceInput.value=selected?selected.dataset.price:"";
-
-});
-
-/* LOAD SALES */
-
-async function loadSales(){
-
-const res=await fetch("/api/sales",{credentials:"include"});
-const sales=await res.json();
-
-tbody.innerHTML="";
-
-sales.forEach(s=>{
-
-const tr=document.createElement("tr");
-
-const date=new Date(s.date).toLocaleDateString();
-
-tr.innerHTML=`
-
-<td>${s._id}</td>
-<td>${s.itemName}</td>
-<td>${s.price}</td>
-<td>${s.quantity}</td>
-<td>${s.total}</td>
-<td>${date}</td>
-<td><button class="delete-btn">Delete</button></td>
-
-`;
-
-tr.querySelector(".delete-btn").addEventListener("click",()=>{
-deleteSale(s._id);
-});
-
-tbody.appendChild(tr);
-
-});
-
-}
-
-/* ADD SALE */
-
-async function addSale(){
-
-const itemId=itemSelect.value;
-const quantity=parseInt(quantityInput.value);
-const price=parseFloat(priceInput.value);
-
-if(!itemId||!quantity||!price){
-alert("Fill all fields");
-return;
-}
-
-await fetch("/api/sales",{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-credentials:"include",
-
-body:JSON.stringify({itemId,quantity,price})
-
-});
-
-itemSelect.value="";
-quantityInput.value="";
-priceInput.value="";
-
-loadSales();
-
-}
-
-/* DELETE SALE */
-
-async function deleteSale(id){
-
-if(!confirm("Delete this sale?")) return;
-
-await fetch(`/api/sales/${id}`,{
-
-method:"DELETE",
-credentials:"include"
-
-});
-
-loadSales();
-
-}
-
-/* INIT */
-
-loadItems();
-loadSales();
-
-window.addSale=addSale;
-
-});
-
 </script>
 
 </body>
