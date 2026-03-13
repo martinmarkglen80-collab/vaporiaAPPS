@@ -1,14 +1,7 @@
-/* =========================
-   IMPORTS
-========================= */
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const multer = require("multer");
-const fs = require("fs");
 require("dotenv").config();
 
 const app = express();
@@ -18,355 +11,156 @@ const app = express();
 ========================= */
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(__dirname));
-app.use("/uploads", express.static("uploads"));
 
 /* =========================
    MONGODB CONNECTION
 ========================= */
 mongoose.connect(process.env.MONGO_URI)
-.then(()=>console.log("✅ MongoDB Connected"))
-.catch(err=>console.log("❌ MongoDB Error:",err));
+    .then(() => console.log("✅ MongoDB Connected"))
+    .catch(err => console.log("❌ MongoDB Error:", err));
 
 /* =========================
-   MULTER IMAGE UPLOAD
+   SCHEMAS & MODELS
 ========================= */
-const storage = multer.diskStorage({
- destination:(req,file,cb)=>{
-  const dir="./uploads";
-  if(!fs.existsSync(dir)) fs.mkdirSync(dir);
-  cb(null,dir);
- },
- filename:(req,file,cb)=>{
-  cb(null,Date.now()+"-"+file.originalname);
- }
-});
+const supplierSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    contact: String
+}, { timestamps: true });
+const Supplier = mongoose.model("Supplier", supplierSchema);
 
-const upload = multer({storage});
-
-/* =========================
-   SCHEMAS
-========================= */
-
-const userSchema = new mongoose.Schema({
- username:String,
- email:String,
- password:String
-},{timestamps:true});
+const reportSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    date: { type: Date, default: Date.now }
+}, { timestamps: true });
+const Report = mongoose.model("Report", reportSchema);
 
 const itemSchema = new mongoose.Schema({
- name:String,
- description:String,
- stock:Number,
- price:Number,
- image:String
-},{timestamps:true});
-
-const supplierSchema = new mongoose.Schema({
- name:String,
- contact:String
-},{timestamps:true});
+    name: { type: String, required: true },
+    stock: { type: Number, required: true },
+    price: { type: Number, required: true },
+}, { timestamps: true });
+const Item = mongoose.model("Item", itemSchema);
 
 const saleSchema = new mongoose.Schema({
- item:{ type:mongoose.Schema.Types.ObjectId, ref:"Item"},
- quantity:Number,
- price:Number,
- total:Number,
- date:{type:Date,default:Date.now}
-},{timestamps:true});
+    item: { type: mongoose.Schema.Types.ObjectId, ref: "Item", required: true },
+    quantity: { type: Number, required: true },
+    price: { type: Number, required: true },
+    total: { type: Number, required: true },
+    date: { type: Date, default: Date.now }
+}, { timestamps: true });
+const Sale = mongoose.model("Sale", saleSchema);
 
 /* =========================
-   MODELS
+   API ROUTES
 ========================= */
 
-const User = mongoose.model("User",userSchema);
-const Item = mongoose.model("Item",itemSchema);
-const Supplier = mongoose.model("Supplier",supplierSchema);
-const Sale = mongoose.model("Sale",saleSchema);
-
-/* =========================
-   AUTH MIDDLEWARE
-========================= */
-
-function auth(req,res,next){
-
- const token = req.cookies.token;
-
- if(!token){
-  return res.status(401).json({message:"Unauthorized"});
- }
-
- try{
-  const decoded = jwt.verify(token,process.env.JWT_SECRET);
-  req.user = decoded;
-  next();
- }catch(err){
-  return res.status(401).json({message:"Invalid Token"});
- }
-
-}
-
-/* =========================
-   AUTH ROUTES
-========================= */
-
-app.post("/register",async(req,res)=>{
-
- const {username,email,password}=req.body;
-
- const existing = await User.findOne({username});
- if(existing) return res.status(400).json({message:"User exists"});
-
- const hashed = await bcrypt.hash(password,10);
-
- const user = new User({
- username,
- email,
- password:hashed
- });
-
- await user.save();
-
- res.json({message:"Account created"});
-
+/* --- Suppliers --- */
+app.get("/api/suppliers", async (req, res) => {
+    const suppliers = await Supplier.find();
+    res.json(suppliers);
 });
 
-
-app.post("/login",async(req,res)=>{
-
- const {username,password} = req.body;
-
- const user = await User.findOne({username});
-
- if(!user){
- return res.status(401).json({message:"Invalid login"});
- }
-
- const match = await bcrypt.compare(password,user.password);
-
- if(!match){
- return res.status(401).json({message:"Invalid login"});
- }
-
- const token = jwt.sign(
- {id:user._id,username:user.username},
- process.env.JWT_SECRET,
- {expiresIn:"7d"}
- );
-
- res.cookie("token",token,{
- httpOnly:true,
- maxAge:7*24*60*60*1000
- });
-
- res.json({message:"Login successful"});
-
+app.post("/api/suppliers", async (req, res) => {
+    const { name, contact } = req.body;
+    if (!name) return res.status(400).json({ message: "Supplier name required" });
+    const supplier = new Supplier({ name, contact });
+    await supplier.save();
+    res.json(supplier);
 });
 
-
-app.post("/logout",(req,res)=>{
- res.clearCookie("token");
- res.json({message:"Logged out"});
+app.put("/api/suppliers/:id", async (req, res) => {
+    const { name, contact } = req.body;
+    const updated = await Supplier.findByIdAndUpdate(req.params.id, { name, contact }, { new: true });
+    res.json(updated);
 });
 
-
-/* =========================
-   ITEMS API
-========================= */
-
-app.get("/api/items",auth,async(req,res)=>{
- const items = await Item.find();
- res.json(items);
+app.delete("/api/suppliers/:id", async (req, res) => {
+    await Supplier.findByIdAndDelete(req.params.id);
+    res.json({ message: "Deleted" });
 });
 
-app.post("/api/items",auth,upload.single("image"),async(req,res)=>{
-
- const {name,description,stock,price}=req.body;
-
- const image = req.file ? `/uploads/${req.file.filename}` : "";
-
- const item = new Item({
- name,
- description,
- stock,
- price,
- image
- });
-
- await item.save();
-
- res.json(item);
-
+/* --- Reports --- */
+app.get("/api/reports", async (req, res) => {
+    const reports = await Report.find().sort({ date: -1 });
+    res.json(reports);
 });
 
-app.put("/api/items/:id",auth,upload.single("image"),async(req,res)=>{
-
- const {name,description,stock,price}=req.body;
-
- const update = {name,description,stock,price};
-
- if(req.file) update.image = `/uploads/${req.file.filename}`;
-
- const item = await Item.findByIdAndUpdate(
- req.params.id,
- update,
- {new:true}
- );
-
- res.json(item);
-
+app.post("/api/reports", async (req, res) => {
+    const { name } = req.body;
+    if (!name) return res.status(400).json({ message: "Report name required" });
+    const report = new Report({ name });
+    await report.save();
+    res.json(report);
 });
 
-app.delete("/api/items/:id",auth,async(req,res)=>{
- await Item.findByIdAndDelete(req.params.id);
- res.json({message:"Item deleted"});
+app.put("/api/reports/:id", async (req, res) => {
+    const { name } = req.body;
+    const updated = await Report.findByIdAndUpdate(req.params.id, { name }, { new: true });
+    res.json(updated);
 });
 
-
-/* =========================
-   LOW STOCK WARNING
-========================= */
-
-app.get("/api/items/lowstock",auth,async(req,res)=>{
-
- const lowStock = await Item.find({ stock:{ $lte:5 } });
-
- res.json(lowStock);
-
+app.delete("/api/reports/:id", async (req, res) => {
+    await Report.findByIdAndDelete(req.params.id);
+    res.json({ message: "Deleted" });
 });
 
-
-/* =========================
-   SALES API
-========================= */
-
-app.get("/api/sales",auth,async(req,res)=>{
-
- const sales = await Sale.find().populate("item");
-
- const formatted = sales.map(s=>({
- _id:s._id,
- itemName:s.item ? s.item.name : "Deleted",
- price:s.price,
- quantity:s.quantity,
- total:s.total,
- date:s.date
- }));
-
- res.json(formatted);
-
+/* --- Items --- */
+app.get("/api/items", async (req, res) => {
+    const items = await Item.find();
+    res.json(items);
 });
 
-
-app.post("/api/sales",auth,async(req,res)=>{
-
- const {itemId,quantity} = req.body;
-
- const item = await Item.findById(itemId);
-
- if(!item){
- return res.status(404).json({message:"Item not found"});
- }
-
- if(quantity > item.stock){
- return res.status(400).json({message:"Not enough stock"});
- }
-
- const total = item.price * quantity;
-
- const sale = new Sale({
- item:itemId,
- quantity,
- price:item.price,
- total
- });
-
- await sale.save();
-
- item.stock -= quantity;
- await item.save();
-
- res.json({message:"Sale added"});
-
+app.post("/api/items", async (req, res) => {
+    const { name, stock, price } = req.body;
+    if (!name || stock == null || price == null) return res.status(400).json({ message: "All fields required" });
+    const item = new Item({ name, stock: Number(stock), price: Number(price) });
+    await item.save();
+    res.json(item);
 });
 
-
-app.delete("/api/sales/:id",auth,async(req,res)=>{
-
- const sale = await Sale.findById(req.params.id);
-
- if(sale){
-
- const item = await Item.findById(sale.item);
-
- if(item){
- item.stock += sale.quantity;
- await item.save();
- }
-
- await sale.deleteOne();
-
- }
-
- res.json({message:"Sale deleted"});
-
+app.put("/api/items/:id", async (req, res) => {
+    const { name, stock, price } = req.body;
+    const updated = await Item.findByIdAndUpdate(req.params.id, { name, stock: Number(stock), price: Number(price) }, { new: true });
+    res.json(updated);
 });
 
-
-/* =========================
-   DASHBOARD STATS
-========================= */
-
-app.get("/api/dashboard",auth,async(req,res)=>{
-
- const totalItems = await Item.countDocuments();
- const availableItems = await Item.countDocuments({stock:{$gt:0}});
- const outOfStock = await Item.countDocuments({stock:{$lte:0}});
- const totalSales = await Sale.countDocuments();
-
- const sales = await Sale.find();
-
- const totalRevenue = sales.reduce((sum,s)=>sum+s.total,0);
-
- res.json({
- totalItems,
- availableItems,
- outOfStock,
- totalSales,
- totalRevenue
- });
-
+app.delete("/api/items/:id", async (req, res) => {
+    await Item.findByIdAndDelete(req.params.id);
+    res.json({ message: "Deleted" });
 });
 
-
-/* =========================
-   SALES CHART DATA
-========================= */
-
-app.get("/api/sales/chart",auth,async(req,res)=>{
-
- const sales = await Sale.aggregate([
- {
- $group:{
- _id:{ $month:"$date" },
- total:{ $sum:"$total" }
- }
- }
- ]);
-
- res.json(sales);
-
+/* --- Sales --- */
+app.get("/api/sales", async (req, res) => {
+    const sales = await Sale.find().populate("item");
+    const formatted = sales.map(s => ({
+        _id: s._id,
+        itemName: s.item.name,
+        price: s.price,
+        quantity: s.quantity,
+        total: s.total,
+        date: s.date
+    }));
+    res.json(formatted);
 });
 
+app.post("/api/sales", async (req, res) => {
+    const { itemId, quantity, price } = req.body;
+    if (!itemId || quantity == null || price == null) return res.status(400).json({ message: "All fields required" });
+    const total = Number(quantity) * Number(price);
+    const sale = new Sale({ item: itemId, quantity: Number(quantity), price: Number(price), total });
+    await sale.save();
+    res.json(sale);
+});
+
+app.delete("/api/sales/:id", async (req, res) => {
+    await Sale.findByIdAndDelete(req.params.id);
+    res.json({ message: "Deleted" });
+});
 
 /* =========================
    SERVER
 ========================= */
-
 const PORT = process.env.PORT || 3000;
-
-app.listen(PORT,()=>{
- console.log(`🚀 Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
