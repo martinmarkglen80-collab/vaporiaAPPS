@@ -1,21 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Reports - Vaporia</title>
 
 <style>
-
 body{
     margin:0;
     font-family:'Segoe UI',sans-serif;
     background:#d8c4ad;
     position:relative;
 }
-
-/* Background */
 body::before{
     content:"";
     position:fixed;
@@ -27,23 +23,17 @@ body::before{
     opacity:0.25;
     z-index:-1;
 }
-
-/* Topbar */
 .topbar{
     padding:15px;
     background:rgba(193,168,142,0.9);
     display:flex;
     align-items:center;
-    position:relative;
 }
-
 .menu-btn{
     font-size:26px;
     cursor:pointer;
     margin-right:20px;
 }
-
-/* Sidebar */
 .sidebar{
     position:fixed;
     left:-250px;
@@ -55,7 +45,6 @@ body::before{
     transition:0.3s;
     z-index:9999;
 }
-
 .sidebar a{
     display:block;
     padding:15px;
@@ -63,23 +52,12 @@ body::before{
     color:#4b3a2a;
     font-size:18px;
 }
-
 .sidebar a:hover{
     background:rgba(143,123,101,0.9);
     color:white;
 }
-
-.sidebar.active{
-    left:0;
-}
-
-/* Main Content */
-.main{
-    padding:30px;
-    position:relative;
-}
-
-/* Add Section */
+.sidebar.active{ left:0; }
+.main{ padding:30px; position:relative; }
 .add-section{
     background:rgba(200,180,150,0.95);
     padding:20px;
@@ -90,13 +68,11 @@ body::before{
     gap:10px;
     align-items:center;
 }
-
 .add-section input{
     padding:8px;
     border-radius:5px;
     border:1px solid #a88a78;
 }
-
 .add-section button{
     padding:8px 15px;
     background:#4b3a2a;
@@ -105,41 +81,37 @@ body::before{
     border-radius:5px;
     cursor:pointer;
 }
-
-.add-section button:hover{
-    background:#2e1f13;
-}
-
-/* Table */
+.add-section button:hover{ background:#2e1f13; }
 table{
     width:100%;
     border-collapse:collapse;
     background:#d8c4ad;
 }
-
 th,td{
     border:2px solid #6b5a48;
     padding:10px;
     text-align:center;
 }
-
-th{
-    background:#b9a68d;
+th{ background:#b9a68d; }
+.delete-btn{
+    background:#c0392b;
+    color:white;
+    padding:5px 10px;
+    border:none;
+    border-radius:4px;
+    cursor:pointer;
 }
-.delete-btn { background: #c0392b; }
-
+.delete-btn:hover{ background:#7b241c; }
 </style>
 </head>
 
 <body>
 
-<!-- TOP BAR -->
 <div class="topbar">
     <div class="menu-btn">☰</div>
     <h2>Reports</h2>
 </div>
 
-<!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
     <a href="dashboard.html">Dashboard</a>
     <a href="items.html">Items</a>
@@ -149,9 +121,7 @@ th{
     <a href="#" id="logoutBtn">Logout</a>
 </div>
 
-<!-- MAIN CONTENT -->
 <div class="main">
-
     <div class="add-section">
         <input type="text" id="reportName" placeholder="Report Name">
         <button onclick="addReport()">Add Report</button>
@@ -166,92 +136,54 @@ th{
                 <th>Actions</th>
             </tr>
         </thead>
-
         <tbody id="reportsTable"></tbody>
     </table>
-
 </div>
 
 <script>
-
-/* =========================
-   SIDEBAR
-========================= */
-
 const sidebar = document.getElementById("sidebar");
 const menuBtn = document.querySelector(".menu-btn");
 const logoutBtn = document.getElementById("logoutBtn");
 
-menuBtn.onclick = e => {
-    e.stopPropagation();
-    sidebar.classList.toggle("active");
-};
+// Sidebar toggle
+menuBtn.onclick = e => { e.stopPropagation(); sidebar.classList.toggle("active"); };
+document.addEventListener("click", e => { if(!sidebar.contains(e.target) && !menuBtn.contains(e.target)) sidebar.classList.remove("active"); });
 
-document.addEventListener("click", e => {
-    if (!sidebar.contains(e.target) && !menuBtn.contains(e.target)){
-        sidebar.classList.remove("active");
-    }
-});
-
-/* =========================
-   LOGOUT
-========================= */
-
+// Logout
 logoutBtn.onclick = async e => {
     e.preventDefault();
-    await fetch("/logout",{method:"POST",credentials:"include"});
+    await fetch("/logout",{ method:"POST", credentials:"include" });
     window.location="login.html";
 };
 
-/* =========================
-   LOAD REPORTS
-========================= */
-
+// Load reports
 async function loadReports(){
-
     const res = await fetch("/api/reports",{credentials:"include"});
     const reports = await res.json();
-
     const tbody = document.getElementById("reportsTable");
     tbody.innerHTML = "";
 
     reports.forEach(r => {
-
         const tr = document.createElement("tr");
         const date = new Date(r.date).toLocaleDateString();
-
         tr.innerHTML = `
-        <td>${r._id}</td>
-
-        <td>
-            <input type="text"
-            value="${r.name}"
-            onchange="updateReport('${r._id}', this.value)">
-        </td>
-
-        <td>${date}</td>
-
-        <td>
-            <button onclick="deleteReport('${r._id}')">Delete</button>
-        </td>
+            <td>${r._id}</td>
+            <td>
+                <input type="text" value="${r.name}" onchange="updateReport('${r._id}', this.value)">
+            </td>
+            <td>${date}</td>
+            <td>
+                <button class="delete-btn" onclick="deleteReport('${r._id}')">Delete</button>
+            </td>
         `;
-
         tbody.appendChild(tr);
     });
 }
 
-/* =========================
-   ADD REPORT
-========================= */
-
+// Add report
 async function addReport(){
-
-    const name = document.getElementById("reportName").value;
-
-    if(!name){
-        alert("Report name required");
-        return;
-    }
+    const name = document.getElementById("reportName").value.trim();
+    if(!name){ alert("Report name required"); return; }
 
     await fetch("/api/reports",{
         method:"POST",
@@ -264,43 +196,26 @@ async function addReport(){
     loadReports();
 }
 
-/* =========================
-   UPDATE REPORT
-========================= */
-
-async function updateReport(id,name){
-
-    await fetch("/api/reports/"+id,{
+// Update report
+async function updateReport(id, name){
+    if(!name.trim()) return;
+    await fetch(`/api/reports/${id}`,{
         method:"PUT",
         headers:{ "Content-Type":"application/json" },
         body:JSON.stringify({ name }),
         credentials:"include"
     });
-
 }
 
-/* =========================
-   DELETE REPORT
-========================= */
-
+// Delete report
 async function deleteReport(id){
-
-    if(!confirm("Delete report?")) return;
-
-    await fetch("/api/reports/"+id,{
-        method:"DELETE",
-        credentials:"include"
-    });
-
+    if(!confirm("Delete this report?")) return;
+    await fetch(`/api/reports/${id}`,{ method:"DELETE", credentials:"include" });
     loadReports();
 }
 
-/* =========================
-   INITIAL LOAD
-========================= */
-
+// Initialize
 loadReports();
-
 </script>
 
 </body>
