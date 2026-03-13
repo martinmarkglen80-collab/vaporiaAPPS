@@ -154,197 +154,85 @@ th { background: #b9a68d; }
 </div>
 
 <script>
-
-/* =========================
-   VARIABLES
-========================= */
-
-let availableItems = [];
-
-const sidebar = document.getElementById("sidebar");
-const menuBtn = document.querySelector(".menu-btn");
-const logoutBtn = document.getElementById("logoutBtn");
-
-
-/* =========================
-   SIDEBAR MENU
-========================= */
-
-menuBtn.onclick = (e) => {
-    e.stopPropagation();
-    sidebar.classList.toggle("active");
-};
-
-document.addEventListener("click", (e) => {
-    if (!sidebar.contains(e.target) && !menuBtn.contains(e.target)) {
-        sidebar.classList.remove("active");
-    }
-});
-
-
-/* =========================
-   LOGOUT
-========================= */
-
-logoutBtn.onclick = async (e) => {
-    e.preventDefault();
-
-    await fetch("/logout", {
-        method: "POST",
-        credentials: "include"
-    });
-
-    window.location = "login.html";
-};
-
-
-/* =========================
-   LOAD ITEMS FOR DROPDOWN
-========================= */
-
-async function loadItemsForSales() {
-
-    const res = await fetch("/api/items", {
-        credentials: "include"
-    });
-
-    availableItems = (await res.json()).filter(i => i.stock > 0);
-
-    const select = document.getElementById("itemSelect");
-
-    select.innerHTML = `<option value="">Select Item</option>`;
-
-    availableItems.forEach(item => {
-
-        const opt = document.createElement("option");
-
-        opt.value = item._id;
-        opt.textContent = item.name;
-
-        select.appendChild(opt);
-
-    });
-
-}
-
-
-/* =========================
-   AUTO PRICE
-========================= */
-
-document
-.getElementById("itemSelect")
-.addEventListener("change", function () {
-
-    const item = availableItems.find(i => i._id === this.value);
-
-    document.getElementById("price").value =
-        item ? item.price : "";
-
-});
-
-
-/* =========================
-   LOAD SALES
-========================= */
-
-async function loadSales() {
-
-    const res = await fetch("/api/sales", {
-        credentials: "include"
-    });
-
-    const sales = await res.json();
-
+document.addEventListener("DOMContentLoaded", () => {
     const tbody = document.getElementById("salesTable");
 
-    tbody.innerHTML = "";
+    // =========================
+    // LOAD SALES
+    // =========================
+    async function loadSales() {
+        try {
+            const res = await fetch("/api/sales", { credentials: "include" });
+            if (!res.ok) throw new Error("Failed to fetch sales");
+            const sales = await res.json();
 
-    sales.forEach((s, i) => {
+            tbody.innerHTML = "";
+            sales.forEach(s => {
+                const tr = document.createElement("tr");
+                const date = new Date(s.date).toLocaleDateString();
+                tr.innerHTML = `
+                    <td>${s._id}</td>
+                    <td>${s.itemName}</td>
+                    <td>${s.price}</td>
+                    <td>${s.quantity}</td>
+                    <td>${s.total}</td>
+                    <td>${date}</td>
+                    <td><button class="delete-btn">Delete</button></td>
+                `;
 
-        const tr = document.createElement("tr");
+                // Delete button
+                tr.querySelector(".delete-btn").addEventListener("click", () => deleteSale(s._id));
 
-        tr.innerHTML = `
-            <td>${i + 1}</td>
-            <td>${s.itemName}</td>
-            <td>₱${s.price}</td>
-            <td>${s.quantity}</td>
-            <td>₱${s.total}</td>
-            <td>${new Date(s.date).toLocaleString()}</td>
-            <td>
-                <button class="delete-btn"
-                onclick="deleteSale('${s._id}')">
-                Delete
-                </button>
-            </td>
-        `;
-
-        tbody.appendChild(tr);
-
-    });
-
-}
-
-
-/* =========================
-   ADD SALE
-========================= */
-
-async function addSale() {
-
-    const itemId = document.getElementById("itemSelect").value;
-    const quantity = document.getElementById("quantity").value;
-
-    if (!itemId || !quantity) {
-        alert("Select item and quantity");
-        return;
+                tbody.appendChild(tr);
+            });
+        } catch (err) {
+            console.error("Error loading sales:", err);
+        }
     }
 
-    await fetch("/api/sales", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ itemId, quantity }),
-        credentials: "include"
-    });
+    // =========================
+    // ADD SALE
+    // =========================
+    async function addSale() {
+        const item = document.getElementById("itemSelect").value;
+        const quantity = parseInt(document.getElementById("quantity").value);
+        const price = parseFloat(document.getElementById("price").value);
 
-    document.getElementById("quantity").value = "";
-    document.getElementById("price").value = "";
-    document.getElementById("itemSelect").value = "";
+        if (!item || !quantity || !price) {
+            alert("Fill all fields");
+            return;
+        }
 
+        const total = quantity * price;
+
+        await fetch("/api/sales", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ item, quantity, price, total }),
+            credentials: "include"
+        });
+
+        document.getElementById("quantity").value = "";
+        document.getElementById("price").value = "";
+
+        loadSales();
+    }
+
+    // =========================
+    // DELETE SALE
+    // =========================
+    async function deleteSale(id) {
+        if (!confirm("Delete this sale?")) return;
+        await fetch(`/api/sales/${id}`, { method: "DELETE", credentials: "include" });
+        loadSales();
+    }
+
+    // =========================
+    // INITIALIZE
+    // =========================
+    document.getElementById("addSaleBtn").addEventListener("click", addSale);
     loadSales();
-    loadItemsForSales();
-
-}
-
-
-/* =========================
-   DELETE SALE
-========================= */
-
-async function deleteSale(id) {
-
-    if (!confirm("Delete sale?")) return;
-
-    await fetch("/api/sales/" + id, {
-        method: "DELETE",
-        credentials: "include"
-    });
-
-    loadSales();
-    loadItemsForSales();
-
-}
-
-
-/* =========================
-   INITIAL LOAD
-========================= */
-
-loadItemsForSales();
-loadSales();
-
+});
 </script>
 
 </body>

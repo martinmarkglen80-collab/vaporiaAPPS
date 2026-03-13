@@ -141,82 +141,93 @@ th{ background:#b9a68d; }
 </div>
 
 <script>
-const sidebar = document.getElementById("sidebar");
-const menuBtn = document.querySelector(".menu-btn");
-const logoutBtn = document.getElementById("logoutBtn");
-
-// Sidebar toggle
-menuBtn.onclick = e => { e.stopPropagation(); sidebar.classList.toggle("active"); };
-document.addEventListener("click", e => { if(!sidebar.contains(e.target) && !menuBtn.contains(e.target)) sidebar.classList.remove("active"); });
-
-// Logout
-logoutBtn.onclick = async e => {
-    e.preventDefault();
-    await fetch("/logout",{ method:"POST", credentials:"include" });
-    window.location="login.html";
-};
-
-// Load reports
-async function loadReports(){
-    const res = await fetch("/api/reports",{credentials:"include"});
-    const reports = await res.json();
+document.addEventListener("DOMContentLoaded", () => {
     const tbody = document.getElementById("reportsTable");
-    tbody.innerHTML = "";
 
-    reports.forEach(r => {
-        const tr = document.createElement("tr");
-        const date = new Date(r.date).toLocaleDateString();
-        tr.innerHTML = `
-            <td>${r._id}</td>
-            <td>
-                <input type="text" value="${r.name}" onchange="updateReport('${r._id}', this.value)">
-            </td>
-            <td>${date}</td>
-            <td>
-                <button class="delete-btn" onclick="deleteReport('${r._id}')">Delete</button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
+    // =========================
+    // LOAD REPORTS
+    // =========================
+    async function loadReports() {
+        try {
+            const res = await fetch("/api/reports", { credentials: "include" });
+            if (!res.ok) throw new Error("Failed to fetch reports");
+            const reports = await res.json();
 
-// Add report
-async function addReport(){
-    const name = document.getElementById("reportName").value.trim();
-    if(!name){ alert("Report name required"); return; }
+            tbody.innerHTML = "";
+            reports.forEach(r => {
+                const tr = document.createElement("tr");
+                const date = new Date(r.date).toLocaleDateString();
+                tr.innerHTML = `
+                    <td>${r._id}</td>
+                    <td><input type="text" value="${r.name}" class="report-name"></td>
+                    <td>${date}</td>
+                    <td><button class="delete-btn">Delete</button></td>
+                `;
 
-    await fetch("/api/reports",{
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body:JSON.stringify({ name }),
-        credentials:"include"
-    });
+                // Delete button
+                tr.querySelector(".delete-btn").addEventListener("click", () => deleteReport(r._id));
 
-    document.getElementById("reportName").value="";
+                // Auto-update on input change
+                tr.querySelector(".report-name").addEventListener("change", () => {
+                    const name = tr.querySelector(".report-name").value;
+                    updateReport(r._id, name);
+                });
+
+                tbody.appendChild(tr);
+            });
+        } catch (err) {
+            console.error("Error loading reports:", err);
+        }
+    }
+
+    // =========================
+    // ADD REPORT
+    // =========================
+    async function addReport() {
+        const name = document.getElementById("reportName").value.trim();
+        if (!name) {
+            alert("Report name required");
+            return;
+        }
+
+        await fetch("/api/reports", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name }),
+            credentials: "include"
+        });
+
+        document.getElementById("reportName").value = "";
+        loadReports();
+    }
+
+    // =========================
+    // UPDATE REPORT
+    // =========================
+    async function updateReport(id, name) {
+        await fetch(`/api/reports/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name }),
+            credentials: "include"
+        });
+    }
+
+    // =========================
+    // DELETE REPORT
+    // =========================
+    async function deleteReport(id) {
+        if (!confirm("Delete this report?")) return;
+        await fetch(`/api/reports/${id}`, { method: "DELETE", credentials: "include" });
+        loadReports();
+    }
+
+    // =========================
+    // INITIALIZE
+    // =========================
+    document.getElementById("addReportBtn").addEventListener("click", addReport);
     loadReports();
-}
-
-// Update report
-async function updateReport(id, name){
-    if(!name.trim()) return;
-    await fetch(`/api/reports/${id}`,{
-        method:"PUT",
-        headers:{ "Content-Type":"application/json" },
-        body:JSON.stringify({ name }),
-        credentials:"include"
-    });
-}
-
-// Delete report
-async function deleteReport(id){
-    if(!confirm("Delete this report?")) return;
-    await fetch(`/api/reports/${id}`,{ method:"DELETE", credentials:"include" });
-    loadReports();
-}
-
-// Initialize
-loadReports();
+});
 </script>
-
 </body>
 </html>

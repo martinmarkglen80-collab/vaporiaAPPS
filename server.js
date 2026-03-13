@@ -74,7 +74,6 @@ const reportSchema = new mongoose.Schema({
 
 const saleSchema = new mongoose.Schema({
   item: { type: mongoose.Schema.Types.ObjectId, ref: "Item" },
-  itemName: String,
   quantity: Number,
   price: Number,
   total: Number,
@@ -96,7 +95,6 @@ const Sale = mongoose.model("Sale", saleSchema);
 function auth(req, res, next) {
   const token = req.cookies.token;
   if (!token) return res.status(401).json({ message: "Unauthorized" });
-
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
@@ -110,34 +108,41 @@ function auth(req, res, next) {
    AUTH ROUTES
 ========================= */
 app.post("/register", async (req, res) => {
-  const { username, email, password } = req.body;
+  try {
+    const { username, email, password } = req.body;
+    const existing = await User.findOne({ username });
+    if (existing) return res.status(400).json({ message: "User exists" });
 
-  const existing = await User.findOne({ username });
-  if (existing) return res.status(400).json({ message: "User exists" });
+    const hashed = await bcrypt.hash(password, 10);
+    const user = new User({ username, email, password: hashed });
+    await user.save();
 
-  const hashed = await bcrypt.hash(password, 10);
-  const user = new User({ username, email, password: hashed });
-  await user.save();
-
-  res.json({ message: "Account created" });
+    res.json({ message: "Account created" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
 app.post("/login", async (req, res) => {
-  const { username, password } = req.body;
-  const user = await User.findOne({ username });
-  if (!user) return res.status(401).json({ message: "Invalid login" });
+  try {
+    const { username, password } = req.body;
+    const user = await User.findOne({ username });
+    if (!user) return res.status(401).json({ message: "Invalid login" });
 
-  const match = await bcrypt.compare(password, user.password);
-  if (!match) return res.status(401).json({ message: "Invalid login" });
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) return res.status(401).json({ message: "Invalid login" });
 
-  const token = jwt.sign(
-    { id: user._id, username: user.username },
-    process.env.JWT_SECRET,
-    { expiresIn: "7d" }
-  );
+    const token = jwt.sign(
+      { id: user._id, username: user.username },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
 
-  res.cookie("token", token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
-  res.json({ message: "Login successful" });
+    res.cookie("token", token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
+    res.json({ message: "Login successful" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
 app.post("/logout", (req, res) => {
@@ -174,9 +179,51 @@ app.delete("/api/items/:id", auth, async (req, res) => {
   res.json({ message: "Item deleted" });
 });
 
-app.get("/api/items/lowstock", auth, async (req, res) => {
-  const lowStock = await Item.find({ stock: { $lte: 5 } });
-  res.json(lowStock);
+/* =========================
+   SALES API
+========================= */
+app.get("/api/sales", auth, async (req, res) => {
+  const sales = await Sale.find().populate("item");
+  const data = sales.map(s => ({
+    _id: s._id,
+    itemName: s.item ? s.item.name : "Deleted",
+    price: s.price,
+    quantity: s.quantity,
+    total: s.total,
+    date: s.date
+  }));
+  res.json(data);
+});
+
+app.post("/api/sales", auth, async (req, res) => {
+  const { item, quantity, price } = req.body;
+  const itemData = await Item.findById(item);
+  if (!itemData) return res.status(400).json({ message: "Item not found" });
+
+  const total = quantity * price;
+
+  const sale = new Sale({ item, quantity, price, total });
+  await sale.save();
+
+  // Update stock
+  itemData.stock -= quantity;
+  await itemData.save();
+
+  res.json(sale);
+});
+
+app.delete("/api/sales/:id", auth, async (req, res) => {
+  const sale = await Sale.findById(req.params.id);
+  if (!sale) return res.status(404).json({ message: "Sale not found" });
+
+  const itemData = await Item.findById(sale.item);
+  if (itemData) {
+    itemData.stock += sale.quantity;
+    await itemData.save();
+  }
+
+  await Sale.findByIdAndDelete(req.params.id);
+  res.json({ message: "Sale deleted" });
 });
 
 /* =========================
@@ -189,6 +236,7 @@ app.get("/api/suppliers", auth, async (req, res) => {
 
 app.post("/api/suppliers", auth, async (req, res) => {
   const { name, contact } = req.body;
+  if (!name) return res.status(400).json({ message: "Supplier name required" });
   const supplier = new Supplier({ name, contact });
   await supplier.save();
   res.json(supplier);
@@ -215,6 +263,7 @@ app.get("/api/reports", auth, async (req, res) => {
 
 app.post("/api/reports", auth, async (req, res) => {
   const { name } = req.body;
+  if (!name) return res.status(400).json({ message: "Report name required" });
   const report = new Report({ name });
   await report.save();
   res.json(report);
@@ -232,77 +281,32 @@ app.delete("/api/reports/:id", auth, async (req, res) => {
 });
 
 /* =========================
-   SALES API
-========================= */
-app.get("/api/sales", auth, async (req, res) => {
-  const sales = await Sale.find().populate("item");
-  const salesFormatted = sales.map(s => ({
-    _id: s._id,
-    item: s.item?._id,
-    itemName: s.item?.name,
-    quantity: s.quantity,
-    price: s.price,
-    total: s.total,
-    date: s.date
-  }));
-  res.json(salesFormatted);
-});
-
-app.post("/api/sales", auth, async (req, res) => {
-  const { item, quantity, price } = req.body;
-  const itemData = await Item.findById(item);
-  if (!itemData) return res.status(400).json({ message: "Item not found" });
-
-  const total = quantity * price;
-
-  const sale = new Sale({
-    item,
-    itemName: itemData.name,
-    quantity,
-    price,
-    total
-  });
-  await sale.save();
-
-  // update stock
-  itemData.stock -= quantity;
-  await itemData.save();
-
-  res.json(sale);
-});
-
-app.delete("/api/sales/:id", auth, async (req, res) => {
-  const sale = await Sale.findById(req.params.id);
-  if (!sale) return res.status(404).json({ message: "Sale not found" });
-
-  const itemData = await Item.findById(sale.item);
-  if (itemData) {
-    itemData.stock += sale.quantity;
-    await itemData.save();
-  }
-
-  await Sale.findByIdAndDelete(req.params.id);
-  res.json({ message: "Sale deleted" });
-});
-
-/* =========================
-   DASHBOARD DATA
+   DASHBOARD API
 ========================= */
 app.get("/api/dashboard", auth, async (req, res) => {
-  const items = await Item.find();
-  const sales = await Sale.find();
-  const suppliers = await Supplier.find();
-  const reports = await Report.find();
-  res.json({
-    itemsCount: items.length,
-    salesCount: sales.length,
-    suppliersCount: suppliers.length,
-    reportsCount: reports.length
-  });
+  try {
+    const items = await Item.find();
+    const sales = await Sale.find();
+    const suppliers = await Supplier.find();
+    const reports = await Report.find();
+
+    res.json({
+      totalItems: items.length || 0,
+      availableItems: items.filter(i => i.stock > 0).length || 0,
+      outOfStock: items.filter(i => i.stock <= 0).length || 0,
+      totalSales: sales.length || 0,
+      totalRevenue: sales.reduce((acc, s) => acc + (s.total || 0), 0),
+      totalSuppliers: suppliers.length || 0,
+      totalReports: reports.length || 0
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
 /* =========================
    START SERVER
 ========================= */
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

@@ -151,49 +151,78 @@ body::before {
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
+    // Elements
     const menuBtn = document.querySelector(".menu-btn");
     const sidebar = document.getElementById("sidebar");
     const logoutBtn = document.getElementById("logoutBtn");
 
-    // Sidebar toggle
-    menuBtn.addEventListener("click", e => {
-        e.stopPropagation();
-        sidebar.classList.toggle("active");
-    });
-    document.addEventListener("click", e => {
-        if (!sidebar.contains(e.target) && !menuBtn.contains(e.target)) {
-            sidebar.classList.remove("active");
-        }
-    });
+    // =========================
+    // SIDEBAR TOGGLE
+    // =========================
+    if (menuBtn && sidebar) {
+        menuBtn.addEventListener("click", e => {
+            e.stopPropagation();
+            sidebar.classList.toggle("active");
+        });
 
-    // Logout
-    logoutBtn.addEventListener("click", async e => {
-        e.preventDefault();
-        e.stopPropagation();
-        await fetch("/logout", { method: "POST", credentials: "include" });
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        window.location.replace("login.html");
-    });
+        document.addEventListener("click", e => {
+            if (!sidebar.contains(e.target) && !menuBtn.contains(e.target)) {
+                sidebar.classList.remove("active");
+            }
+        });
+    }
 
-    // Load dashboard data
+    // =========================
+    // LOGOUT
+    // =========================
+    if (logoutBtn) {
+        logoutBtn.addEventListener("click", async e => {
+            e.preventDefault();
+            e.stopPropagation();
+            try {
+                const res = await fetch("/logout", { method: "POST", credentials: "include" });
+                if (res.ok) window.location.replace("login.html");
+                else console.error("Logout failed:", res.status);
+            } catch (err) {
+                console.error("Logout error:", err);
+            }
+        });
+    }
+
+    // =========================
+    // DASHBOARD DATA
+    // =========================
     async function loadDashboard() {
         try {
             const res = await fetch("/api/dashboard", { credentials: "include" });
-            if (res.status === 401) { window.location.replace("login.html"); return; }
+
+            if (res.status === 401) {
+                window.location.replace("login.html");
+                return;
+            }
+
+            if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+
             const data = await res.json();
-            document.getElementById("totalItems").innerText = data.totalItems;
-            document.getElementById("availableItems").innerText = data.availableItems;
-            document.getElementById("outOfStock").innerText = data.outOfStock;
-            document.getElementById("totalSales").innerText = data.totalSales;
-            document.getElementById("totalRevenue").innerText = data.totalRevenue;
-        } catch(err) {
-            console.error(err);
+
+            document.getElementById("totalItems").innerText = data.totalItems || 0;
+            document.getElementById("availableItems").innerText = data.availableItems || 0;
+            document.getElementById("outOfStock").innerText = data.outOfStock || 0;
+            document.getElementById("totalSales").innerText = data.totalSales || 0;
+            document.getElementById("totalRevenue").innerText = data.totalRevenue || 0;
+        } catch (err) {
+            console.error("Dashboard load error:", err);
         }
     }
 
+    // =========================
+    // INITIALIZE DASHBOARD
+    // =========================
     loadDashboard();
-    setInterval(loadDashboard, 5000);
+    const dashboardInterval = setInterval(loadDashboard, 5000);
+
+    // Stop interval when leaving page
+    window.addEventListener("beforeunload", () => clearInterval(dashboardInterval));
 });
 </script>
 

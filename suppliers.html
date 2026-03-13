@@ -181,135 +181,99 @@ background:#7b241c;
 </div>
 
 <script>
+document.addEventListener("DOMContentLoaded", () => {
+    const tbody = document.getElementById("suppliersTable");
 
-/* =========================
-   SIDEBAR
-========================= */
+    // =========================
+    // LOAD SUPPLIERS
+    // =========================
+    async function loadSuppliers() {
+        try {
+            const res = await fetch("/api/suppliers", { credentials: "include" });
+            if (!res.ok) throw new Error("Failed to fetch suppliers");
+            const suppliers = await res.json();
 
-const sidebar = document.getElementById("sidebar");
-const menuBtn = document.querySelector(".menu-btn");
+            tbody.innerHTML = "";
+            suppliers.forEach(s => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${s._id}</td>
+                    <td><input type="text" value="${s.name}" class="supplier-name"></td>
+                    <td><input type="text" value="${s.contact}" class="supplier-contact"></td>
+                    <td><button class="delete-btn">Delete</button></td>
+                `;
 
-menuBtn.onclick = e=>{
-e.stopPropagation();
-sidebar.classList.toggle("active");
-};
+                // Delete button
+                tr.querySelector(".delete-btn").addEventListener("click", () => deleteSupplier(s._id));
 
-document.addEventListener("click",e=>{
-if(!sidebar.contains(e.target) && !menuBtn.contains(e.target)){
-sidebar.classList.remove("active");
-}
+                // Auto-update on input change
+                ["supplier-name", "supplier-contact"].forEach(cls => {
+                    tr.querySelector(`.${cls}`).addEventListener("change", () => {
+                        const name = tr.querySelector(".supplier-name").value;
+                        const contact = tr.querySelector(".supplier-contact").value;
+                        updateSupplier(s._id, name, contact);
+                    });
+                });
+
+                tbody.appendChild(tr);
+            });
+        } catch (err) {
+            console.error("Error loading suppliers:", err);
+        }
+    }
+
+    // =========================
+    // ADD SUPPLIER
+    // =========================
+    async function addSupplier() {
+        const name = document.getElementById("supplierName").value.trim();
+        const contact = document.getElementById("supplierContact").value.trim();
+
+        if (!name) {
+            alert("Supplier name is required");
+            return;
+        }
+
+        await fetch("/api/suppliers", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, contact }),
+            credentials: "include"
+        });
+
+        document.getElementById("supplierName").value = "";
+        document.getElementById("supplierContact").value = "";
+
+        loadSuppliers();
+    }
+
+    // =========================
+    // UPDATE SUPPLIER
+    // =========================
+    async function updateSupplier(id, name, contact) {
+        await fetch(`/api/suppliers/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, contact }),
+            credentials: "include"
+        });
+    }
+
+    // =========================
+    // DELETE SUPPLIER
+    // =========================
+    async function deleteSupplier(id) {
+        if (!confirm("Delete this supplier?")) return;
+        await fetch(`/api/suppliers/${id}`, { method: "DELETE", credentials: "include" });
+        loadSuppliers();
+    }
+
+    // =========================
+    // INITIALIZE
+    // =========================
+    document.getElementById("addSupplierBtn").addEventListener("click", addSupplier);
+    loadSuppliers();
 });
-
-
-/* =========================
-   LOGOUT
-========================= */
-
-const logoutBtn = document.getElementById("logoutBtn");
-
-logoutBtn.onclick = async e=>{
-e.preventDefault();
-
-await fetch("/logout",{
-method:"POST",
-credentials:"include"
-});
-
-window.location="login.html";
-};
-
-
-/* =========================
-   LOAD SUPPLIERS
-========================= */
-
-async function loadSuppliers(){
-
-const res = await fetch("/api/suppliers",{
-credentials:"include"
-});
-
-const suppliers = await res.json();
-
-const tbody = document.getElementById("suppliersTable");
-
-tbody.innerHTML="";
-
-suppliers.forEach((s,index)=>{
-
-const tr = document.createElement("tr");
-
-tr.innerHTML = `
-<td>${index+1}</td>
-<td>${s.name}</td>
-<td>${s.contact || ""}</td>
-<td>
-<button class="delete-btn" onclick="deleteSupplier('${s._id}')">
-Delete
-</button>
-</td>
-`;
-
-tbody.appendChild(tr);
-
-});
-
-}
-
-
-/* =========================
-   ADD SUPPLIER
-========================= */
-
-async function addSupplier(){
-
-const name = document.getElementById("supplierName").value.trim();
-const contact = document.getElementById("supplierContact").value.trim();
-
-if(!name){
-alert("Supplier name is required");
-return;
-}
-
-await fetch("/api/suppliers",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({name,contact}),
-credentials:"include"
-});
-
-document.getElementById("supplierName").value="";
-document.getElementById("supplierContact").value="";
-
-loadSuppliers();
-
-}
-
-
-/* =========================
-   DELETE SUPPLIER
-========================= */
-
-async function deleteSupplier(id){
-
-if(!confirm("Delete this supplier?")) return;
-
-await fetch(`/api/suppliers/${id}`,{
-method:"DELETE",
-credentials:"include"
-});
-
-loadSuppliers();
-
-}
-
-
-/* =========================
-   INITIAL LOAD
-========================= */
-
-loadSuppliers();
-
 </script>
 
 </body>
