@@ -7,18 +7,11 @@
 
 <style>
 
-body{
-margin:0;
-font-family:'Segoe UI',sans-serif;
-background:#d8c4ad;
-position:relative;
-}
+body { margin:0; font-family:'Segoe UI',sans-serif; background:#d8c4ad; position:relative; }
 
 body::before{
 content:"";
 position:fixed;
-top:0;
-left:0;
 width:100%;
 height:100%;
 background:url('vaporia.jpg');
@@ -29,15 +22,13 @@ pointer-events:none;
 z-index:0;
 }
 
-/* TOPBAR */
-
 .topbar{
 padding:15px;
 background:rgba(193,168,142,0.9);
 display:flex;
 align-items:center;
-position:relative;
 z-index:1;
+position:relative;
 }
 
 .menu-btn{
@@ -45,8 +36,6 @@ font-size:26px;
 cursor:pointer;
 margin-right:20px;
 }
-
-/* SIDEBAR */
 
 .sidebar{
 position:fixed;
@@ -77,15 +66,11 @@ color:white;
 left:0;
 }
 
-/* MAIN */
-
 .main{
 padding:30px;
 position:relative;
 z-index:1;
 }
-
-/* ADD ITEM */
 
 .add-section{
 background:rgba(200,180,150,0.95);
@@ -117,109 +102,58 @@ cursor:pointer;
 background:#2e1f13;
 }
 
-/* ITEM GRID */
-
 .items-grid{
 display:flex;
-overflow-x:auto;
-gap:20px;
-padding-bottom:10px;
+flex-direction:column;
+gap:15px;
 }
 
 .item-card{
-min-width:200px;
-flex:0 0 auto;
 background:rgba(200,180,150,0.95);
 padding:15px;
 border-radius:12px;
-text-align:center;
-color:#4b3a2a;
-box-shadow:0 4px 12px rgba(0,0,0,0.25);
+display:flex;
+align-items:center;
+gap:10px;
 }
 
 .item-card img{
-width:100%;
-height:150px;
+width:100px;
+height:100px;
 object-fit:cover;
 border-radius:8px;
-margin-bottom:10px;
 }
 
-.item-actions{
-display:flex;
-justify-content:center;
-gap:10px;
-margin-top:8px;
+.item-card input{
+padding:5px;
+border-radius:4px;
+border:1px solid #a88a78;
+width:100px;
 }
 
 .item-actions button{
-padding:4px 8px;
+margin-left:5px;
+padding:5px 8px;
 border:none;
-border-radius:5px;
-cursor:pointer;
-font-size:14px;
+border-radius:4px;
 color:white;
+cursor:pointer;
 }
 
-.edit-btn{background:#2e86de;}
-.delete-btn{background:#c0392b;}
+.save-btn{ background:#27ae60; }
+.cancel-btn{ background:#c0392b; }
 
-/* SEARCH BUTTON */
-
-#openSearchModal{
-position:fixed;
-bottom:30px;
-right:30px;
-z-index:1000;
-padding:12px 15px;
+.delete-btn{
+background:#c0392b;
+color:white;
+padding:5px 8px;
 border:none;
-border-radius:50px;
-background:#4b3a2a;
-color:white;
-font-size:18px;
+border-radius:4px;
 cursor:pointer;
 }
 
-/* MODAL */
-
-.modal{
-display:none;
-position:fixed;
-z-index:10000;
-left:0;
-top:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.5);
-justify-content:center;
-align-items:center;
-}
-
-.modal-content{
-background:#d8c4ad;
-padding:20px;
-border-radius:12px;
-width:90%;
-max-width:400px;
-position:relative;
-display:flex;
-flex-direction:column;
-gap:10px;
-}
-
-.modal-close{
-position:absolute;
-top:5px;
-right:10px;
-font-size:22px;
-cursor:pointer;
-}
-
-.modal-content input{
-width:100%;
-padding:8px;
-border-radius:5px;
-border:1px solid #a88a78;
+.delete-btn:hover{
+background:#7b241c;
 }
 
 </style>
@@ -227,14 +161,10 @@ border:1px solid #a88a78;
 
 <body>
 
-<!-- TOPBAR -->
-
 <div class="topbar">
-<div class="menu-btn" id="menuBtn">☰</div>
+<div class="menu-btn">☰</div>
 <h2>Items</h2>
 </div>
-
-<!-- SIDEBAR -->
 
 <div class="sidebar" id="sidebar">
 <a href="dashboard.html">Dashboard</a>
@@ -242,15 +172,12 @@ border:1px solid #a88a78;
 <a href="sales.html">Sales</a>
 <a href="reports.html">Reports</a>
 <a href="suppliers.html">Suppliers</a>
-<a href="#">Logout</a>
+<a href="#" id="logoutBtn">Logout</a>
 </div>
-
-<!-- MAIN -->
 
 <div class="main">
 
 <div class="add-section">
-
 <input type="text" id="name" placeholder="Item Name">
 <input type="text" id="description" placeholder="Description">
 <input type="number" id="stock" placeholder="Stock">
@@ -258,39 +185,43 @@ border:1px solid #a88a78;
 
 <input type="file" accept="image/*" capture="environment" id="imageInput" style="display:none;">
 
-<button onclick="document.getElementById('imageInput').click()">📷 Upload</button>
-<button onclick="addItem()">Add Item</button>
+<button onclick="document.getElementById('imageInput').click()">📷 Scan / Upload</button>
 
+<button onclick="addItem()">Add Item</button>
 </div>
 
-<h3>Available Items</h3>
 <div class="items-grid" id="itemsGrid"></div>
 
-<h3>NOT AVAIL</h3>
-<div class="items-grid" id="outOfStockGrid"></div>
-
-</div>
-
-<!-- SEARCH -->
-
-<button id="openSearchModal">🔍</button>
-
-<div class="modal" id="searchModal">
-<div class="modal-content">
-<span class="modal-close" id="closeSearchModal">&times;</span>
-<input type="text" id="searchInputModal" placeholder="Search items...">
-</div>
 </div>
 
 <script>
 
+document.addEventListener("DOMContentLoaded",()=>{
+
+const sidebar=document.getElementById("sidebar");
+const menuBtn=document.querySelector(".menu-btn");
+const logoutBtn=document.getElementById("logoutBtn");
+const itemsGrid=document.getElementById("itemsGrid");
+
 /* SIDEBAR */
 
-const menuBtn=document.getElementById("menuBtn");
-const sidebar=document.getElementById("sidebar");
-
-menuBtn.onclick=()=>{
+menuBtn.onclick=e=>{
+e.stopPropagation();
 sidebar.classList.toggle("active");
+};
+
+document.addEventListener("click",e=>{
+if(!sidebar.contains(e.target)&&!menuBtn.contains(e.target)){
+sidebar.classList.remove("active");
+}
+});
+
+/* LOGOUT */
+
+logoutBtn.onclick=async e=>{
+e.preventDefault();
+await fetch("/logout",{method:"POST",credentials:"include"});
+window.location="login.html";
 };
 
 /* LOAD ITEMS */
@@ -300,34 +231,67 @@ async function loadItems(){
 const res=await fetch("/api/items",{credentials:"include"});
 const items=await res.json();
 
-const grid=document.getElementById("itemsGrid");
-const outGrid=document.getElementById("outOfStockGrid");
-
-grid.innerHTML="";
-outGrid.innerHTML="";
+itemsGrid.innerHTML="";
 
 items.forEach(item=>{
 
 const card=document.createElement("div");
-card.className="item-card";
+card.classList.add("item-card");
 
 card.innerHTML=`
-<img src="${item.image || 'no-image.png'}">
-<h4>${item.name}</h4>
-<p>${item.description || ""}</p>
-<p>Stock: ${item.stock}</p>
-<p>₱${item.price}</p>
+<img src="${item.image || 'vaporia.jpg'}">
+<input type="text" value="${item.name}" class="name">
+<input type="text" value="${item.description}" class="description">
+<input type="number" value="${item.stock}" class="stock">
+<input type="number" value="${item.price}" class="price">
 
 <div class="item-actions">
-<button class="delete-btn" onclick="deleteItem('${item._id}')">Delete</button>
+<button class="save-btn">Save</button>
+<button class="cancel-btn">Cancel</button>
+<button class="delete-btn">Delete</button>
 </div>
 `;
 
-if(item.stock>0){
-grid.appendChild(card);
-}else{
-outGrid.appendChild(card);
-}
+/* SAVE */
+
+card.querySelector(".save-btn").onclick=async()=>{
+
+const name=card.querySelector(".name").value;
+const desc=card.querySelector(".description").value;
+const stock=parseInt(card.querySelector(".stock").value);
+const price=parseFloat(card.querySelector(".price").value);
+
+await fetch(`/api/items/${item._id}`,{
+method:"PUT",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({name,description:desc,stock,price}),
+credentials:"include"
+});
+
+loadItems();
+
+};
+
+/* CANCEL */
+
+card.querySelector(".cancel-btn").onclick=()=>{
+loadItems();
+};
+
+/* DELETE */
+
+card.querySelector(".delete-btn").onclick=async()=>{
+
+await fetch(`/api/items/${item._id}`,{
+method:"DELETE",
+credentials:"include"
+});
+
+loadItems();
+
+};
+
+itemsGrid.appendChild(card);
 
 });
 
@@ -335,16 +299,16 @@ outGrid.appendChild(card);
 
 /* ADD ITEM */
 
-async function addItem(){
+window.addItem=async()=>{
 
 const name=document.getElementById("name").value;
 const description=document.getElementById("description").value;
-const stock=document.getElementById("stock").value;
-const price=document.getElementById("price").value;
-const imageFile=document.getElementById("imageInput").files[0];
+const stock=parseInt(document.getElementById("stock").value);
+const price=parseFloat(document.getElementById("price").value);
+const imageInput=document.getElementById("imageInput");
 
-if(!name || !stock || !price){
-alert("Name, Stock and Price required");
+if(!name||!stock||!price){
+alert("Name, stock, price required");
 return;
 }
 
@@ -355,8 +319,8 @@ formData.append("description",description);
 formData.append("stock",stock);
 formData.append("price",price);
 
-if(imageFile){
-formData.append("image",imageFile);
+if(imageInput.files[0]){
+formData.append("image",imageInput.files[0]);
 }
 
 await fetch("/api/items",{
@@ -365,28 +329,25 @@ body:formData,
 credentials:"include"
 });
 
-loadItems();
-
-}
-
-/* DELETE */
-
-async function deleteItem(id){
-
-if(!confirm("Delete this item?")) return;
-
-await fetch(`/api/items/${id}`,{
-method:"DELETE",
-credentials:"include"
-});
+document.getElementById("name").value="";
+document.getElementById("description").value="";
+document.getElementById("stock").value="";
+document.getElementById("price").value="";
+imageInput.value="";
 
 loadItems();
 
-}
+};
 
 /* INIT */
 
 loadItems();
+
+/* AUTO REFRESH */
+
+setInterval(loadItems,5000);
+
+});
 
 </script>
 

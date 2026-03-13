@@ -4,365 +4,134 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Suppliers - Vaporia</title>
-
 <style>
-
-body{
-margin:0;
-font-family:'Segoe UI',sans-serif;
-background:#d8c4ad;
-position:relative;
-}
-
-body::before{
-content:"";
-position:fixed;
-width:100%;
-height:100%;
-background:url('vaporia.jpg');
-background-size:400px auto;
-background-position:center;
-opacity:0.25;
-z-index:-1;
-}
-
-/* TOPBAR */
-
-.topbar{
-padding:15px;
-background:rgba(193,168,142,0.9);
-display:flex;
-align-items:center;
-position:relative;
-z-index:1;
-}
-
-.menu-btn{
-font-size:26px;
-cursor:pointer;
-margin-right:20px;
-}
-
-/* SIDEBAR */
-
-.sidebar{
-position:fixed;
-left:-250px;
-top:0;
-width:250px;
-height:100%;
-background:rgba(168,146,120,0.95);
-padding-top:60px;
-transition:0.3s;
-z-index:9999;
-}
-
-.sidebar a{
-display:block;
-padding:15px;
-text-decoration:none;
-color:#4b3a2a;
-font-size:18px;
-}
-
-.sidebar a:hover{
-background:rgba(143,123,101,0.9);
-color:white;
-}
-
-.sidebar.active{
-left:0;
-}
-
-/* MAIN */
-
-.main{
-padding:30px;
-}
-
-/* ADD SECTION */
-
-.add-section{
-background:rgba(200,180,150,0.95);
-padding:20px;
-border-radius:12px;
-margin-bottom:20px;
-display:flex;
-flex-wrap:wrap;
-gap:10px;
-align-items:center;
-}
-
-.add-section input{
-padding:8px;
-border-radius:5px;
-border:1px solid #a88a78;
-}
-
-.add-section button{
-padding:8px 15px;
-background:#4b3a2a;
-color:white;
-border:none;
-border-radius:5px;
-cursor:pointer;
-}
-
-.add-section button:hover{
-background:#2e1f13;
-}
-
-/* TABLE */
-
-table{
-width:100%;
-border-collapse:collapse;
-background:#d8c4ad;
-}
-
-th,td{
-border:2px solid #6b5a48;
-padding:10px;
-text-align:center;
-}
-
-th{
-background:#b9a68d;
-}
-
-/* DELETE BUTTON */
-
-.delete-btn{
-background:#c0392b;
-color:white;
-padding:5px 10px;
-border:none;
-border-radius:4px;
-cursor:pointer;
-}
-
-.delete-btn:hover{
-background:#7b241c;
-}
-
+body{margin:0;font-family:'Segoe UI',sans-serif;background:#d8c4ad;position:relative;}
+body::before{content:"";position:fixed;width:100%;height:100%;background:url('vaporia.jpg');background-size:400px auto;background-position:center;opacity:0.25;z-index:-1;}
+.topbar{padding:15px;background:rgba(193,168,142,0.9);display:flex;align-items:center;}
+.menu-btn{font-size:26px;cursor:pointer;margin-right:20px;}
+.sidebar{position:fixed;left:-250px;top:0;width:250px;height:100%;background:rgba(168,146,120,0.95);padding-top:60px;transition:0.3s;z-index:9999;}
+.sidebar a{display:block;padding:15px;text-decoration:none;color:#4b3a2a;font-size:18px;}
+.sidebar a:hover{background:rgba(143,123,101,0.9);color:white;}
+.sidebar.active{left:0;}
+.main{padding:30px;}
+.add-section{background:rgba(200,180,150,0.95);padding:20px;border-radius:12px;margin-bottom:20px;display:flex;gap:10px;align-items:center;}
+.add-section input{padding:8px;border-radius:5px;border:1px solid #a88a78;}
+.add-section button{padding:8px 15px;background:#4b3a2a;color:white;border:none;border-radius:5px;cursor:pointer;}
+.add-section button:hover{background:#2e1f13;}
+table{width:100%;border-collapse:collapse;background:#d8c4ad;}
+th,td{border:2px solid #6b5a48;padding:10px;text-align:center;}
+th{background:#b9a68d;}
+.delete-btn{background:#c0392b;color:white;padding:5px 10px;border:none;border-radius:4px;cursor:pointer;}
+.delete-btn:hover{background:#7b241c;}
 </style>
 </head>
-
 <body>
 
-<!-- TOPBAR -->
-
 <div class="topbar">
-<div class="menu-btn">☰</div>
-<h2>Suppliers</h2>
+  <div class="menu-btn">☰</div>
+  <h2>Suppliers</h2>
 </div>
-
-<!-- SIDEBAR -->
 
 <div class="sidebar" id="sidebar">
-<a href="dashboard.html">Dashboard</a>
-<a href="items.html">Items</a>
-<a href="sales.html">Sales</a>
-<a href="reports.html">Reports</a>
-<a href="suppliers.html">Suppliers</a>
-<a href="#" id="logoutBtn">Logout</a>
+  <a href="dashboard.html">Dashboard</a>
+  <a href="items.html">Items</a>
+  <a href="sales.html">Sales</a>
+  <a href="reports.html">Reports</a>
+  <a href="suppliers.html">Suppliers</a>
+  <a href="#" id="logoutBtn">Logout</a>
 </div>
-
-<!-- MAIN -->
 
 <div class="main">
+  <div class="add-section">
+    <input type="text" id="supplierName" placeholder="Supplier Name">
+    <input type="text" id="supplierContact" placeholder="Contact">
+    <button onclick="addSupplier()">Add Supplier</button>
+  </div>
 
-<div class="add-section">
-
-<input type="text" id="supplierName" placeholder="Supplier Name">
-
-<input type="text" id="supplierContact" placeholder="Contact">
-
-<button onclick="addSupplier()">Add Supplier</button>
-
-</div>
-
-<table>
-
-<thead>
-<tr>
-<th>ID</th>
-<th>Name</th>
-<th>Contact</th>
-<th>Actions</th>
-</tr>
-</thead>
-
-<tbody id="suppliersTable"></tbody>
-
-</table>
-
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Contact</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="suppliersTable"></tbody>
+  </table>
 </div>
 
 <script>
+document.addEventListener("DOMContentLoaded", () => {
+  const sidebar = document.getElementById("sidebar");
+  const menuBtn = document.querySelector(".menu-btn");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const suppliersTable = document.getElementById("suppliersTable");
 
-document.addEventListener("DOMContentLoaded",()=>{
+  // Sidebar toggle
+  menuBtn.onclick = e => { e.stopPropagation(); sidebar.classList.toggle("active"); };
+  document.addEventListener("click", e => { if(!sidebar.contains(e.target) && !menuBtn.contains(e.target)) sidebar.classList.remove("active"); });
 
-const tbody=document.getElementById("suppliersTable");
-const sidebar=document.getElementById("sidebar");
-const menuBtn=document.querySelector(".menu-btn");
-const logoutBtn=document.getElementById("logoutBtn");
+  // Logout
+  logoutBtn.onclick = async e => { e.preventDefault(); await fetch("/logout",{method:"POST",credentials:"include"}); window.location="login.html"; };
 
-/* SIDEBAR */
+  // Load suppliers
+  async function loadSuppliers() {
+    const res = await fetch("/api/suppliers",{credentials:"include"});
+    const suppliers = await res.json();
+    suppliersTable.innerHTML = "";
 
-menuBtn.addEventListener("click",e=>{
-e.stopPropagation();
-sidebar.classList.toggle("active");
+    suppliers.forEach((s,index)=>{
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${index+1}</td>
+        <td><input type="text" value="${s.name}" class="supplier-name"></td>
+        <td><input type="text" value="${s.contact}" class="supplier-contact"></td>
+        <td><button class="delete-btn">Delete</button></td>
+      `;
+
+      // Delete supplier
+      tr.querySelector(".delete-btn").onclick = async () => {
+        await fetch(`/api/suppliers/${s._id}`,{method:"DELETE",credentials:"include"});
+        loadSuppliers();
+      };
+
+      // Edit supplier
+      ["supplier-name","supplier-contact"].forEach(cls=>{
+        tr.querySelector(`.${cls}`).onchange = async ()=>{
+          const name = tr.querySelector(".supplier-name").value;
+          const contact = tr.querySelector(".supplier-contact").value;
+          await fetch(`/api/suppliers/${s._id}`,{
+            method:"PUT",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({name,contact}),
+            credentials:"include"
+          });
+        };
+      });
+
+      suppliersTable.appendChild(tr);
+    });
+  }
+
+  // Add supplier
+  window.addSupplier = async () => {
+    const name = document.getElementById("supplierName").value.trim();
+    const contact = document.getElementById("supplierContact").value.trim();
+    if(!name) return alert("Supplier name required");
+    await fetch("/api/suppliers",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({name,contact}),
+      credentials:"include"
+    });
+    document.getElementById("supplierName").value="";
+    document.getElementById("supplierContact").value="";
+    loadSuppliers();
+  };
+
+  loadSuppliers();
 });
-
-document.addEventListener("click",e=>{
-if(!sidebar.contains(e.target)&&!menuBtn.contains(e.target)){
-sidebar.classList.remove("active");
-}
-});
-
-/* LOGOUT */
-
-logoutBtn.addEventListener("click",async e=>{
-
-e.preventDefault();
-
-await fetch("/logout",{
-method:"POST",
-credentials:"include"
-});
-
-window.location.replace("login.html");
-
-});
-
-/* LOAD SUPPLIERS */
-
-async function loadSuppliers(){
-
-const res=await fetch("/api/suppliers",{credentials:"include"});
-const suppliers=await res.json();
-
-tbody.innerHTML="";
-
-suppliers.forEach(s=>{
-
-const tr=document.createElement("tr");
-
-tr.innerHTML=`
-<td>${s._id}</td>
-<td><input type="text" value="${s.name}" class="supplier-name"></td>
-<td><input type="text" value="${s.contact}" class="supplier-contact"></td>
-<td><button class="delete-btn">Delete</button></td>
-`;
-
-tr.querySelector(".delete-btn").addEventListener("click",()=>{
-deleteSupplier(s._id);
-});
-
-tr.querySelector(".supplier-name").addEventListener("change",()=>{
-
-const name=tr.querySelector(".supplier-name").value;
-const contact=tr.querySelector(".supplier-contact").value;
-
-updateSupplier(s._id,name,contact);
-
-});
-
-tr.querySelector(".supplier-contact").addEventListener("change",()=>{
-
-const name=tr.querySelector(".supplier-name").value;
-const contact=tr.querySelector(".supplier-contact").value;
-
-updateSupplier(s._id,name,contact);
-
-});
-
-tbody.appendChild(tr);
-
-});
-
-}
-
-/* ADD SUPPLIER */
-
-async function addSupplier(){
-
-const name=document.getElementById("supplierName").value.trim();
-const contact=document.getElementById("supplierContact").value.trim();
-
-if(!name){
-alert("Supplier name required");
-return;
-}
-
-await fetch("/api/suppliers",{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-credentials:"include",
-
-body:JSON.stringify({name,contact})
-
-});
-
-document.getElementById("supplierName").value="";
-document.getElementById("supplierContact").value="";
-
-loadSuppliers();
-
-}
-
-/* UPDATE */
-
-async function updateSupplier(id,name,contact){
-
-await fetch(`/api/suppliers/${id}`,{
-
-method:"PUT",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-credentials:"include",
-
-body:JSON.stringify({name,contact})
-
-});
-
-}
-
-/* DELETE */
-
-async function deleteSupplier(id){
-
-if(!confirm("Delete this supplier?")) return;
-
-await fetch(`/api/suppliers/${id}`,{
-
-method:"DELETE",
-credentials:"include"
-
-});
-
-loadSuppliers();
-
-}
-
-/* INIT */
-
-loadSuppliers();
-
-window.addSupplier=addSupplier;
-
-});
-
 </script>
-
 </body>
 </html>
