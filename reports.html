@@ -1,204 +1,305 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Reports - Vaporia</title>
 
 <style>
-body {
-    margin: 0;
-    font-family: 'Segoe UI', sans-serif;
-    background: #d8c4ad;
+
+body{
+    margin:0;
+    font-family:'Segoe UI',sans-serif;
+    background:#d8c4ad;
+    position:relative;
 }
-body::before {
-    content: "";
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    background: url('vaporia.jpg');
-    background-size: 400px auto;
-    background-position: center;
-    opacity: 0.25;
-    z-index: -1;
+
+/* Background */
+body::before{
+    content:"";
+    position:fixed;
+    width:100%;
+    height:100%;
+    background:url('vaporia.jpg');
+    background-size:400px auto;
+    background-position:center;
+    opacity:0.25;
+    z-index:-1;
 }
-.sidebar {
-    position: fixed;
-    left: 0;
-    top: 0;
-    width: 250px;
-    height: 100%;
-    background: #b9a68d;
-    padding-top: 40px;
-    border-right: 3px solid #333;
+
+/* Topbar */
+.topbar{
+    padding:15px;
+    background:rgba(193,168,142,0.9);
+    display:flex;
+    align-items:center;
+    position:relative;
 }
-.sidebar h2 {
-    text-align: center;
-    margin-bottom: 40px;
+
+.menu-btn{
+    font-size:26px;
+    cursor:pointer;
+    margin-right:20px;
 }
-.sidebar a {
-    display: block;
-    padding: 20px;
-    font-size: 22px;
-    text-decoration: none;
-    color: black;
-    border-bottom: 1px solid rgba(0,0,0,0.2);
+
+/* Sidebar */
+.sidebar{
+    position:fixed;
+    left:-250px;
+    top:0;
+    width:250px;
+    height:100%;
+    background:rgba(168,146,120,0.95);
+    padding-top:60px;
+    transition:0.3s;
+    z-index:9999;
 }
-.sidebar a:hover { background: #a8957b; }
-.logout {
-    position: absolute;
-    bottom: 30px;
-    left: 40px;
-    padding: 10px 30px;
-    border: 2px solid #333;
-    background: #cbb89e;
-    cursor: pointer;
+
+.sidebar a{
+    display:block;
+    padding:15px;
+    text-decoration:none;
+    color:#4b3a2a;
+    font-size:18px;
 }
-.main {
-    margin-left: 270px;
-    padding: 40px;
+
+.sidebar a:hover{
+    background:rgba(143,123,101,0.9);
+    color:white;
 }
-.add-btn {
-    padding: 12px 30px;
-    background: #cbb89e;
-    border: 2px solid #333;
-    font-weight: bold;
-    cursor: pointer;
-    margin-bottom: 20px;
+
+.sidebar.active{
+    left:0;
 }
-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: #d8c4ad;
+
+/* Main Content */
+.main{
+    padding:30px;
+    position:relative;
 }
-th, td {
-    border: 2px solid #6b5a48;
-    padding: 15px;
-    text-align: center;
+
+/* Add Section */
+.add-section{
+    background:rgba(200,180,150,0.95);
+    padding:20px;
+    border-radius:12px;
+    margin-bottom:20px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
 }
-th { background: #b9a68d; }
-.edit-btn {
-    background: #2e86de;
-    color: white;
-    padding: 5px 8px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+
+.add-section input{
+    padding:8px;
+    border-radius:5px;
+    border:1px solid #a88a78;
 }
-.edit-btn:hover { background: #1b4f72; }
-.delete-btn {
-    background: #c0392b;
-    color: white;
-    padding: 5px 8px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+
+.add-section button{
+    padding:8px 15px;
+    background:#4b3a2a;
+    color:white;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
 }
-.delete-btn:hover { background: #7b241c; }
-.inline-input { width: 80%; padding: 4px; border-radius: 4px; border: 1px solid #a88a78; margin: 2px 0; }
-.inline-save { background: #27ae60; padding: 4px 8px; border: none; color: white; }
-.inline-cancel { background: #c0392b; padding: 4px 8px; border: none; color: white; }
+
+.add-section button:hover{
+    background:#2e1f13;
+}
+
+/* Table */
+table{
+    width:100%;
+    border-collapse:collapse;
+    background:#d8c4ad;
+}
+
+th,td{
+    border:2px solid #6b5a48;
+    padding:10px;
+    text-align:center;
+}
+
+th{
+    background:#b9a68d;
+}
+
 </style>
 </head>
+
 <body>
 
-<div class="sidebar">
-<h2>Dashboard</h2>
-<a href="dashboard.html">Dashboard</a>
-<a href="items.html">Items</a>
-<a href="sales.html">Sales</a>
-<a href="reports.html">Reports</a>
-<a href="suppliers.html">Suppliers</a>
-<button class="logout" id="logoutBtn">Logout</button>
+<!-- TOP BAR -->
+<div class="topbar">
+    <div class="menu-btn">☰</div>
+    <h2>Reports</h2>
 </div>
 
-<div class="main">
-<button class="add-btn" onclick="showAdd()">Add Report</button>
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="items.html">Items</a>
+    <a href="sales.html">Sales</a>
+    <a href="reports.html">Reports</a>
+    <a href="suppliers.html">Suppliers</a>
+    <a href="#" id="logoutBtn">Logout</a>
+</div>
 
-<table>
-<thead>
-<tr>
-<th>ID</th>
-<th>Report Name</th>
-<th>Report Date</th>
-<th>Action</th>
-</tr>
-</thead>
-<tbody id="reportsTable"></tbody>
-</table>
+<!-- MAIN CONTENT -->
+<div class="main">
+
+    <div class="add-section">
+        <input type="text" id="reportName" placeholder="Report Name">
+        <button onclick="addReport()">Add Report</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Report Name</th>
+                <th>Report Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody id="reportsTable"></tbody>
+    </table>
+
 </div>
 
 <script>
-let reports = [];
 
-async function loadReports() {
-    const res = await fetch("/api/reports", { credentials: "include" });
-    reports = await res.json();
+/* =========================
+   SIDEBAR
+========================= */
+
+const sidebar = document.getElementById("sidebar");
+const menuBtn = document.querySelector(".menu-btn");
+const logoutBtn = document.getElementById("logoutBtn");
+
+menuBtn.onclick = e => {
+    e.stopPropagation();
+    sidebar.classList.toggle("active");
+};
+
+document.addEventListener("click", e => {
+    if (!sidebar.contains(e.target) && !menuBtn.contains(e.target)){
+        sidebar.classList.remove("active");
+    }
+});
+
+/* =========================
+   LOGOUT
+========================= */
+
+logoutBtn.onclick = async e => {
+    e.preventDefault();
+    await fetch("/logout",{method:"POST",credentials:"include"});
+    window.location="login.html";
+};
+
+/* =========================
+   LOAD REPORTS
+========================= */
+
+async function loadReports(){
+
+    const res = await fetch("/api/reports",{credentials:"include"});
+    const reports = await res.json();
+
     const tbody = document.getElementById("reportsTable");
     tbody.innerHTML = "";
-    reports.forEach((r, i) => {
+
+    reports.forEach(r => {
+
         const tr = document.createElement("tr");
-        tr.id = r._id;
+        const date = new Date(r.date).toLocaleDateString();
+
         tr.innerHTML = `
-            <td>${i+1}</td>
-            <td>${r.name}</td>
-            <td>${new Date(r.createdAt || r.date).toLocaleString()}</td>
-            <td>
-                <button class="edit-btn" onclick="editReport('${r._id}')">Edit</button>
-                <button class="delete-btn" onclick="deleteReport('${r._id}')">Delete</button>
-            </td>
+        <td>${r._id}</td>
+
+        <td>
+            <input type="text"
+            value="${r.name}"
+            onchange="updateReport('${r._id}', this.value)">
+        </td>
+
+        <td>${date}</td>
+
+        <td>
+            <button onclick="deleteReport('${r._id}')">Delete</button>
+        </td>
         `;
+
         tbody.appendChild(tr);
     });
 }
 
-function showAdd() {
-    const name = prompt("Enter report name:");
-    if (name) addReport(name);
-}
+/* =========================
+   ADD REPORT
+========================= */
 
-async function addReport(name) {
-    await fetch("/api/reports", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name })
+async function addReport(){
+
+    const name = document.getElementById("reportName").value;
+
+    if(!name){
+        alert("Report name required");
+        return;
+    }
+
+    await fetch("/api/reports",{
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify({ name }),
+        credentials:"include"
     });
+
+    document.getElementById("reportName").value="";
     loadReports();
 }
 
-function editReport(id) {
-    const report = reports.find(r => r._id === id);
-    const newName = prompt("Edit report name:", report.name);
-    if (newName) saveReport(id, newName);
+/* =========================
+   UPDATE REPORT
+========================= */
+
+async function updateReport(id,name){
+
+    await fetch("/api/reports/"+id,{
+        method:"PUT",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify({ name }),
+        credentials:"include"
+    });
+
 }
 
-async function saveReport(id, name) {
-    await fetch(`/api/reports/${id}`, {
-        method: "PUT",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name })
+/* =========================
+   DELETE REPORT
+========================= */
+
+async function deleteReport(id){
+
+    if(!confirm("Delete report?")) return;
+
+    await fetch("/api/reports/"+id,{
+        method:"DELETE",
+        credentials:"include"
     });
+
     loadReports();
 }
 
-async function deleteReport(id) {
-    if (!confirm("Delete this report?")) return;
-    await fetch(`/api/reports/${id}`, {
-        method: "DELETE",
-        credentials: "include"
-    });
-    loadReports();
-}
-
-// Logout
-document.getElementById("logoutBtn").addEventListener("click", async () => {
-    await fetch("/logout", { method: "POST", credentials: "include" });
-    window.location = "login.html";
-});
+/* =========================
+   INITIAL LOAD
+========================= */
 
 loadReports();
+
 </script>
 
 </body>
