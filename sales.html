@@ -6,15 +6,85 @@
 <title>Sales - Vaporia</title>
 
 <style>
-body{margin:0;font-family:'Segoe UI',sans-serif;background:#d8c4ad;position:relative;}
-body::before{content:"";position:fixed;width:100%;height:100%;background:url('vaporia.jpg');background-size:400px auto;background-position:center;opacity:0.25;z-index:-1;}
-.topbar{padding:15px;background:rgba(193,168,142,0.9);display:flex;align-items:center;z-index:1;position:relative;}
-.menu-btn{font-size:26px;cursor:pointer;margin-right:20px;}
-.sidebar{position:fixed;left:-250px;top:0;width:250px;height:100%;background:rgba(168,146,120,0.95);padding-top:60px;transition:0.3s;z-index:9999;}
-.sidebar a{display:block;padding:15px;text-decoration:none;color:#4b3a2a;font-size:18px;}
-.sidebar a:hover{background:rgba(143,123,101,0.9);color:white;}
-.sidebar.active{left:0;}
-.main{padding:30px;position:relative;z-index:1;}
+
+/* BODY */
+
+body{
+margin:0;
+font-family:'Segoe UI',sans-serif;
+background:#d8c4ad;
+position:relative;
+}
+
+body::before{
+content:"";
+position:fixed;
+width:100%;
+height:100%;
+background:url('vaporia.jpg');
+background-size:400px auto;
+background-position:center;
+opacity:0.25;
+z-index:-1;
+}
+
+/* TOPBAR */
+
+.topbar{
+padding:15px;
+background:rgba(193,168,142,0.9);
+display:flex;
+align-items:center;
+position:relative;
+z-index:1;
+}
+
+.menu-btn{
+font-size:26px;
+cursor:pointer;
+margin-right:20px;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+position:fixed;
+left:-250px;
+top:0;
+width:250px;
+height:100%;
+background:rgba(168,146,120,0.95);
+padding-top:60px;
+transition:0.3s;
+z-index:9999;
+}
+
+.sidebar a{
+display:block;
+padding:15px;
+text-decoration:none;
+color:#4b3a2a;
+font-size:18px;
+}
+
+.sidebar a:hover{
+background:rgba(143,123,101,0.9);
+color:white;
+}
+
+.sidebar.active{
+left:0;
+}
+
+/* MAIN */
+
+.main{
+padding:30px;
+position:relative;
+z-index:1;
+}
+
+/* ADD SALE SECTION */
 
 .add-section{
 background:rgba(200,180,150,0.95);
@@ -27,7 +97,8 @@ gap:10px;
 align-items:center;
 }
 
-.add-section input,.add-section select{
+.add-section input,
+.add-section select{
 padding:8px;
 border-radius:5px;
 border:1px solid #a88a78;
@@ -45,6 +116,8 @@ cursor:pointer;
 .add-section button:hover{
 background:#2e1f13;
 }
+
+/* TABLE */
 
 table{
 width:100%;
@@ -74,15 +147,20 @@ cursor:pointer;
 .delete-btn:hover{
 background:#7b241c;
 }
+
 </style>
 </head>
 
 <body>
 
+<!-- TOPBAR -->
+
 <div class="topbar">
 <div class="menu-btn">☰</div>
 <h2>Sales</h2>
 </div>
+
+<!-- SIDEBAR -->
 
 <div class="sidebar" id="sidebar">
 <a href="dashboard.html">Dashboard</a>
@@ -93,22 +171,28 @@ background:#7b241c;
 <a href="#" id="logoutBtn">Logout</a>
 </div>
 
+<!-- MAIN -->
+
 <div class="main">
 
 <div class="add-section">
+
 <select id="itemSelect">
 <option value="">Select Item</option>
 </select>
 
 <input type="number" id="quantity" placeholder="Quantity">
-<input type="number" id="price" placeholder="Price" readonly>
+
+<input type="text" id="price" placeholder="Price" readonly>
 
 <button onclick="addSale()">Add Sale</button>
+
 </div>
 
 <h3>Sales Records</h3>
 
 <table>
+
 <thead>
 <tr>
 <th>ID</th>
@@ -131,18 +215,21 @@ background:#7b241c;
 
 document.addEventListener("DOMContentLoaded",()=>{
 
+const tbody=document.getElementById("salesTable");
 const sidebar=document.getElementById("sidebar");
 const menuBtn=document.querySelector(".menu-btn");
 const logoutBtn=document.getElementById("logoutBtn");
 
 const itemSelect=document.getElementById("itemSelect");
+const quantityInput=document.getElementById("quantity");
 const priceInput=document.getElementById("price");
-const salesTable=document.getElementById("salesTable");
 
-menuBtn.onclick=e=>{
+/* SIDEBAR */
+
+menuBtn.addEventListener("click",e=>{
 e.stopPropagation();
 sidebar.classList.toggle("active");
-};
+});
 
 document.addEventListener("click",e=>{
 if(!sidebar.contains(e.target)&&!menuBtn.contains(e.target)){
@@ -150,40 +237,50 @@ sidebar.classList.remove("active");
 }
 });
 
-logoutBtn.onclick=async e=>{
-e.preventDefault();
-await fetch("/logout",{method:"POST",credentials:"include"});
-window.location="login.html";
-};
+/* LOGOUT */
 
-let items=[];
+logoutBtn.addEventListener("click",async e=>{
+e.preventDefault();
+
+await fetch("/logout",{
+method:"POST",
+credentials:"include"
+});
+
+window.location.replace("login.html");
+
+});
 
 /* LOAD ITEMS */
 
 async function loadItems(){
 
 const res=await fetch("/api/items",{credentials:"include"});
-items=await res.json();
+const items=await res.json();
 
-itemSelect.innerHTML=`<option value="">Select Item</option>`;
+itemSelect.innerHTML='<option value="">Select Item</option>';
 
-items.forEach(item=>{
-itemSelect.innerHTML+=`
-<option value="${item._id}" data-price="${item.price}" data-stock="${item.stock}">
-${item.name} (${item.stock})
-</option>
-`;
+items.forEach(i=>{
+
+const option=document.createElement("option");
+
+option.value=i._id;
+option.dataset.price=i.price;
+option.textContent=i.name;
+
+itemSelect.appendChild(option);
+
 });
 
 }
 
-/* ITEM CHANGE */
+/* AUTO PRICE */
 
 itemSelect.addEventListener("change",()=>{
 
 const selected=itemSelect.selectedOptions[0];
 
-priceInput.value=selected ? selected.dataset.price : "";
+priceInput.value=selected?selected.dataset.price:"";
 
 });
 
@@ -194,37 +291,31 @@ async function loadSales(){
 const res=await fetch("/api/sales",{credentials:"include"});
 const sales=await res.json();
 
-salesTable.innerHTML="";
+tbody.innerHTML="";
 
-sales.forEach((s,index)=>{
+sales.forEach(s=>{
 
 const tr=document.createElement("tr");
 
 const date=new Date(s.date).toLocaleDateString();
 
 tr.innerHTML=`
-<td>${index+1}</td>
+
+<td>${s._id}</td>
 <td>${s.itemName}</td>
 <td>${s.price}</td>
 <td>${s.quantity}</td>
 <td>${s.total}</td>
 <td>${date}</td>
 <td><button class="delete-btn">Delete</button></td>
+
 `;
 
-tr.querySelector(".delete-btn").onclick=async()=>{
-
-await fetch(`/api/sales/${s._id}`,{
-method:"DELETE",
-credentials:"include"
+tr.querySelector(".delete-btn").addEventListener("click",()=>{
+deleteSale(s._id);
 });
 
-loadSales();
-loadItems();
-
-};
-
-salesTable.appendChild(tr);
+tbody.appendChild(tr);
 
 });
 
@@ -232,21 +323,14 @@ salesTable.appendChild(tr);
 
 /* ADD SALE */
 
-window.addSale=async()=>{
+async function addSale(){
 
 const itemId=itemSelect.value;
-const quantity=parseInt(document.getElementById("quantity").value);
+const quantity=parseInt(quantityInput.value);
 const price=parseFloat(priceInput.value);
 
 if(!itemId||!quantity||!price){
 alert("Fill all fields");
-return;
-}
-
-const selectedItem=items.find(i=>i._id===itemId);
-
-if(quantity>selectedItem.stock){
-alert("Not enough stock");
 return;
 }
 
@@ -258,25 +342,43 @@ headers:{
 "Content-Type":"application/json"
 },
 
-body:JSON.stringify({item:itemId,quantity,price}),
+credentials:"include",
 
+body:JSON.stringify({itemId,quantity,price})
+
+});
+
+itemSelect.value="";
+quantityInput.value="";
+priceInput.value="";
+
+loadSales();
+
+}
+
+/* DELETE SALE */
+
+async function deleteSale(id){
+
+if(!confirm("Delete this sale?")) return;
+
+await fetch(`/api/sales/${id}`,{
+
+method:"DELETE",
 credentials:"include"
 
 });
 
-document.getElementById("quantity").value="";
-priceInput.value="";
-itemSelect.value="";
-
 loadSales();
-loadItems();
 
-};
+}
 
 /* INIT */
 
 loadItems();
 loadSales();
+
+window.addSale=addSale;
 
 });
 

@@ -6,10 +6,44 @@
 <title>Reports - Vaporia</title>
 
 <style>
-body{margin:0;font-family:'Segoe UI',sans-serif;background:#d8c4ad;position:relative;}
-body::before{content:"";position:fixed;width:100%;height:100%;background:url('vaporia.jpg');background-size:400px auto;background-position:center;opacity:0.25;z-index:-1;}
-.topbar{padding:15px;background:rgba(193,168,142,0.9);display:flex;align-items:center;}
-.menu-btn{font-size:26px;cursor:pointer;margin-right:20px;}
+
+/* BODY */
+
+body{
+margin:0;
+font-family:'Segoe UI',sans-serif;
+background:#d8c4ad;
+position:relative;
+}
+
+body::before{
+content:"";
+position:fixed;
+width:100%;
+height:100%;
+background:url('vaporia.jpg');
+background-size:400px auto;
+background-position:center;
+opacity:0.25;
+z-index:-1;
+}
+
+/* TOPBAR */
+
+.topbar{
+padding:15px;
+background:rgba(193,168,142,0.9);
+display:flex;
+align-items:center;
+}
+
+.menu-btn{
+font-size:26px;
+cursor:pointer;
+margin-right:20px;
+}
+
+/* SIDEBAR */
 
 .sidebar{
 position:fixed;
@@ -36,9 +70,18 @@ background:rgba(143,123,101,0.9);
 color:white;
 }
 
-.sidebar.active{left:0;}
+.sidebar.active{
+left:0;
+}
 
-.main{padding:30px;}
+/* MAIN */
+
+.main{
+padding:30px;
+position:relative;
+}
+
+/* ADD SECTION */
 
 .add-section{
 background:rgba(200,180,150,0.95);
@@ -46,6 +89,7 @@ padding:20px;
 border-radius:12px;
 margin-bottom:20px;
 display:flex;
+flex-wrap:wrap;
 gap:10px;
 align-items:center;
 }
@@ -69,6 +113,8 @@ cursor:pointer;
 background:#2e1f13;
 }
 
+/* TABLE */
+
 table{
 width:100%;
 border-collapse:collapse;
@@ -81,7 +127,9 @@ padding:10px;
 text-align:center;
 }
 
-th{background:#b9a68d;}
+th{
+background:#b9a68d;
+}
 
 .delete-btn{
 background:#c0392b;
@@ -95,15 +143,27 @@ cursor:pointer;
 .delete-btn:hover{
 background:#7b241c;
 }
+
+.report-name{
+width:90%;
+padding:4px;
+border-radius:4px;
+border:1px solid #a88a78;
+}
+
 </style>
 </head>
 
 <body>
 
+<!-- TOPBAR -->
+
 <div class="topbar">
 <div class="menu-btn">☰</div>
 <h2>Reports</h2>
 </div>
+
+<!-- SIDEBAR -->
 
 <div class="sidebar" id="sidebar">
 <a href="dashboard.html">Dashboard</a>
@@ -113,6 +173,8 @@ background:#7b241c;
 <a href="suppliers.html">Suppliers</a>
 <a href="#" id="logoutBtn">Logout</a>
 </div>
+
+<!-- MAIN -->
 
 <div class="main">
 
@@ -126,12 +188,13 @@ background:#7b241c;
 <tr>
 <th>ID</th>
 <th>Report Name</th>
-<th>Date</th>
+<th>Report Date</th>
 <th>Actions</th>
 </tr>
 </thead>
 
 <tbody id="reportsTable"></tbody>
+
 </table>
 
 </div>
@@ -140,17 +203,17 @@ background:#7b241c;
 
 document.addEventListener("DOMContentLoaded",()=>{
 
+const tbody=document.getElementById("reportsTable");
 const sidebar=document.getElementById("sidebar");
 const menuBtn=document.querySelector(".menu-btn");
 const logoutBtn=document.getElementById("logoutBtn");
-const reportsTable=document.getElementById("reportsTable");
 
 /* SIDEBAR */
 
-menuBtn.onclick=e=>{
+menuBtn.addEventListener("click",e=>{
 e.stopPropagation();
 sidebar.classList.toggle("active");
-};
+});
 
 document.addEventListener("click",e=>{
 if(!sidebar.contains(e.target)&&!menuBtn.contains(e.target)){
@@ -160,74 +223,68 @@ sidebar.classList.remove("active");
 
 /* LOGOUT */
 
-logoutBtn.onclick=async e=>{
+logoutBtn.addEventListener("click",async e=>{
 e.preventDefault();
-await fetch("/logout",{method:"POST",credentials:"include"});
-window.location="login.html";
-};
+
+await fetch("/logout",{
+method:"POST",
+credentials:"include"
+});
+
+window.location.replace("login.html");
+});
 
 /* LOAD REPORTS */
 
 async function loadReports(){
 
+try{
+
 const res=await fetch("/api/reports",{credentials:"include"});
+if(!res.ok) throw new Error("Failed to fetch");
+
 const reports=await res.json();
 
-reportsTable.innerHTML="";
+tbody.innerHTML="";
 
-reports.forEach((r,index)=>{
+reports.forEach(r=>{
 
 const tr=document.createElement("tr");
 
 const date=new Date(r.date).toLocaleDateString();
 
 tr.innerHTML=`
-<td>${index+1}</td>
+<td>${r._id}</td>
 <td><input type="text" value="${r.name}" class="report-name"></td>
 <td>${date}</td>
 <td><button class="delete-btn">Delete</button></td>
 `;
 
-tr.querySelector(".delete-btn").onclick=async()=>{
-
-await fetch(`/api/reports/${r._id}`,{
-method:"DELETE",
-credentials:"include"
+tr.querySelector(".delete-btn").addEventListener("click",()=>{
+deleteReport(r._id);
 });
 
-loadReports();
+tr.querySelector(".report-name").addEventListener("change",()=>{
 
-};
+const name=tr.querySelector(".report-name").value.trim();
 
-tr.querySelector(".report-name").onchange=async()=>{
-
-const name=tr.querySelector(".report-name").value;
-
-await fetch(`/api/reports/${r._id}`,{
-
-method:"PUT",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({name}),
-
-credentials:"include"
+updateReport(r._id,name);
 
 });
 
-};
-
-reportsTable.appendChild(tr);
+tbody.appendChild(tr);
 
 });
+
+}catch(err){
+console.error("Error loading reports:",err);
+}
 
 }
 
 /* ADD REPORT */
 
-window.addReport=async()=>{
+async function addReport(){
 
 const name=document.getElementById("reportName").value.trim();
 
@@ -254,11 +311,54 @@ document.getElementById("reportName").value="";
 
 loadReports();
 
-};
+}
 
-/* INIT */
+/* UPDATE */
+
+async function updateReport(id,name){
+
+if(!name) return;
+
+await fetch(`/api/reports/${id}`,{
+
+method:"PUT",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({name}),
+
+credentials:"include"
+
+});
+
+}
+
+/* DELETE */
+
+async function deleteReport(id){
+
+if(!confirm("Delete this report?")) return;
+
+await fetch(`/api/reports/${id}`,{
+
+method:"DELETE",
+credentials:"include"
+
+});
 
 loadReports();
+
+}
+
+/* INITIAL LOAD */
+
+loadReports();
+
+/* MAKE BUTTON WORK */
+
+window.addReport=addReport;
 
 });
 
