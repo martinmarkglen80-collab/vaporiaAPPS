@@ -154,85 +154,197 @@ th { background: #b9a68d; }
 </div>
 
 <script>
+
+/* =========================
+   VARIABLES
+========================= */
+
 let availableItems = [];
 
-// Load available items for the select dropdown
+const sidebar = document.getElementById("sidebar");
+const menuBtn = document.querySelector(".menu-btn");
+const logoutBtn = document.getElementById("logoutBtn");
+
+
+/* =========================
+   SIDEBAR MENU
+========================= */
+
+menuBtn.onclick = (e) => {
+    e.stopPropagation();
+    sidebar.classList.toggle("active");
+};
+
+document.addEventListener("click", (e) => {
+    if (!sidebar.contains(e.target) && !menuBtn.contains(e.target)) {
+        sidebar.classList.remove("active");
+    }
+});
+
+
+/* =========================
+   LOGOUT
+========================= */
+
+logoutBtn.onclick = async (e) => {
+    e.preventDefault();
+
+    await fetch("/logout", {
+        method: "POST",
+        credentials: "include"
+    });
+
+    window.location = "login.html";
+};
+
+
+/* =========================
+   LOAD ITEMS FOR DROPDOWN
+========================= */
+
 async function loadItemsForSales() {
-    const res = await fetch("/api/items", { credentials: "include" });
+
+    const res = await fetch("/api/items", {
+        credentials: "include"
+    });
+
     availableItems = (await res.json()).filter(i => i.stock > 0);
 
     const select = document.getElementById("itemSelect");
-    select.innerHTML = '<option value="">Select Item</option>';
+
+    select.innerHTML = `<option value="">Select Item</option>`;
 
     availableItems.forEach(item => {
+
         const opt = document.createElement("option");
+
         opt.value = item._id;
         opt.textContent = item.name;
+
         select.appendChild(opt);
+
     });
+
 }
 
-// Update price field when item is selected
-document.getElementById("itemSelect").addEventListener("change", function() {
+
+/* =========================
+   AUTO PRICE
+========================= */
+
+document
+.getElementById("itemSelect")
+.addEventListener("change", function () {
+
     const item = availableItems.find(i => i._id === this.value);
-    document.getElementById("price").value = item ? item.price : "";
+
+    document.getElementById("price").value =
+        item ? item.price : "";
+
 });
 
-// Load all sales records
+
+/* =========================
+   LOAD SALES
+========================= */
+
 async function loadSales() {
-    const res = await fetch("/api/sales", { credentials: "include" });
+
+    const res = await fetch("/api/sales", {
+        credentials: "include"
+    });
+
     const sales = await res.json();
+
     const tbody = document.getElementById("salesTable");
+
     tbody.innerHTML = "";
 
     sales.forEach((s, i) => {
+
         const tr = document.createElement("tr");
+
         tr.innerHTML = `
-            <td>${i+1}</td>
+            <td>${i + 1}</td>
             <td>${s.itemName}</td>
             <td>₱${s.price}</td>
             <td>${s.quantity}</td>
             <td>₱${s.total}</td>
             <td>${new Date(s.date).toLocaleString()}</td>
-            <td><button class="delete-btn" onclick="deleteSale('${s._id}')">Delete</button></td>
+            <td>
+                <button class="delete-btn"
+                onclick="deleteSale('${s._id}')">
+                Delete
+                </button>
+            </td>
         `;
+
         tbody.appendChild(tr);
+
     });
+
 }
 
-// Add a sale
+
+/* =========================
+   ADD SALE
+========================= */
+
 async function addSale() {
+
     const itemId = document.getElementById("itemSelect").value;
     const quantity = document.getElementById("quantity").value;
-    if (!itemId || !quantity) return alert("Select item and quantity");
+
+    if (!itemId || !quantity) {
+        alert("Select item and quantity");
+        return;
+    }
 
     await fetch("/api/sales", {
         method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ itemId, quantity })
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ itemId, quantity }),
+        credentials: "include"
     });
 
     document.getElementById("quantity").value = "";
-    document.getElementById("itemSelect").value = "";
     document.getElementById("price").value = "";
+    document.getElementById("itemSelect").value = "";
 
-    await loadItemsForSales();
-    await loadSales();
+    loadSales();
+    loadItemsForSales();
+
 }
 
-// Delete a sale
+
+/* =========================
+   DELETE SALE
+========================= */
+
 async function deleteSale(id) {
-    if (!confirm("Delete this sale?")) return;
-    await fetch(`/api/sales/${id}`, { method: "DELETE", credentials: "include" });
 
-    await loadItemsForSales();
-    await loadSales();
+    if (!confirm("Delete sale?")) return;
+
+    await fetch("/api/sales/" + id, {
+        method: "DELETE",
+        credentials: "include"
+    });
+
+    loadSales();
+    loadItemsForSales();
+
 }
 
-// Initial load
+
+/* =========================
+   INITIAL LOAD
+========================= */
+
 loadItemsForSales();
 loadSales();
+
 </script>
 
 </body>
