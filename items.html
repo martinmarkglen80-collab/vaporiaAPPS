@@ -283,6 +283,44 @@ border:1px solid #a88a78;
 </div>
 
 <script>
+document.addEventListener("DOMContentLoaded", () => {
+  const menuBtn = document.querySelector(".menu-btn");
+  const sidebar = document.getElementById("sidebar");
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  // =========================
+  // SIDEBAR TOGGLE
+  // =========================
+  if (menuBtn && sidebar) {
+    menuBtn.addEventListener("click", e => {
+      e.stopPropagation(); // prevent immediate close
+      sidebar.classList.toggle("active");
+    });
+
+    // prevent sidebar clicks from closing it
+    sidebar.addEventListener("click", e => e.stopPropagation());
+
+    // close sidebar if clicking outside
+    document.addEventListener("click", () => sidebar.classList.remove("active"));
+  }
+
+  // =========================
+  // LOGOUT
+  // =========================
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", async e => {
+      e.preventDefault();
+      e.stopPropagation();
+      try {
+        const res = await fetch("/logout", { method: "POST", credentials: "include" });
+        if (res.ok) window.location.replace("login.html");
+        else console.error("Logout failed:", res.status);
+      } catch (err) {
+        console.error("Logout error:", err);
+      }
+    });
+  }
+});
 const itemsGrid = document.getElementById("itemsGrid");
 const outOfStockGrid = document.getElementById("outOfStockGrid");
 
