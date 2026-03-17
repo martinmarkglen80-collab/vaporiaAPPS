@@ -6,75 +6,203 @@
 <title>Items - Vaporia Inventory System</title>
 
 <style>
-body { margin:0; font-family:'Segoe UI',sans-serif; background:#d8c4ad; position:relative; }
-body::before {
-    content:""; position:fixed; top:0; left:0; width:100%; height:100%;
-    background:url('vaporia.jpg'); background-size:400px auto;
-    background-position:center top; opacity:0.24; z-index:0;
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: #d8c4ad;
+    position: relative;
 }
-
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('vaporia.jpg');
+    background-size: 400px auto;
+    background-position: center top;
+    opacity: 0.24;
+    pointer-events: none;
+    z-index: 0;
+}
 /* TOPBAR */
-.topbar { padding:15px; background:rgba(193,168,142,0.9); display:flex; align-items:center; z-index:1; position:relative;}
-.menu-btn { font-size:26px; cursor:pointer; margin-right:20px; }
-
+.topbar {
+    padding: 15px;
+    background: rgba(193,168,142,0.9);
+    display: flex;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+.menu-btn {
+    font-size: 26px;
+    cursor: pointer;
+    margin-right: 20px;
+}
 /* SIDEBAR */
 .sidebar {
-    position:fixed; left:-250px; top:0; width:250px; height:100%;
-    background:rgba(168,146,120,0.95); padding-top:60px;
-    transition:0.3s; z-index:9999;
+    position: fixed;
+    left: -250px;
+    top: 0;
+    width: 250px;
+    height: 100%;
+    background: rgba(168,146,120,0.95);
+    padding-top: 60px;
+    transition: 0.3s;
+    z-index: 9999;
 }
-.sidebar a { display:block; padding:15px; text-decoration:none; color:#4b3a2a; }
-.sidebar a:hover { background:rgba(143,123,101,0.9); color:white; }
-.sidebar.active { left:0; }
-
+.sidebar a {
+    display: block;
+    padding: 15px;
+    text-decoration: none;
+    color: #4b3a2a;
+    font-size: 18px;
+}
+.sidebar a:hover {
+    background: rgba(143,123,101,0.9);
+    color: white;
+}
+.sidebar.active {
+    left: 0;
+}
 /* MAIN */
-.main { padding:30px; position:relative; z-index:1; }
-
-/* ADD */
+.main {
+    padding: 30px;
+    position: relative;
+    z-index: 1;
+}
+/* ADD SECTION */
 .add-section {
-    background:rgba(200,180,150,0.95);
-    padding:20px; border-radius:12px; margin-bottom:20px;
-    display:flex; flex-wrap:wrap; gap:10px;
+    background: rgba(200,180,150,0.95);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
 }
-.add-section input { padding:8px; border-radius:5px; border:1px solid #a88a78; }
+.add-section input {
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #a88a78;
+}
 .add-section button {
-    padding:8px 15px; background:#4b3a2a; color:white;
-    border:none; border-radius:5px; cursor:pointer;
+    padding: 8px 15px;
+    background: #4b3a2a;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
 }
-
+.add-section button:hover {
+    background: #2e1f13;
+}
+/* IMAGE PREVIEW */
+#preview {
+    width: 100px;
+    display: none;
+    margin-left: 10px;
+}
 /* ITEMS */
-.items-grid { display:flex; gap:20px; overflow-x:auto; }
+.items-grid {
+    display: flex;
+    overflow-x: auto;
+    gap: 20px;
+    padding-bottom: 10px;
+}
 .item-card {
-    min-width:200px; background:rgba(200,180,150,0.95);
-    padding:15px; border-radius:12px; text-align:center;
+    min-width: 200px;
+    flex: 0 0 auto;
+    background: rgba(200,180,150,0.95);
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+    color: #4b3a2a;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
 }
-.item-card img { width:100%; height:150px; object-fit:cover; border-radius:8px; }
-
-.item-actions { display:flex; justify-content:center; gap:10px; margin-top:10px; }
-.edit-btn { background:#2e86de; color:white; border:none; padding:5px 10px; }
-.delete-btn { background:#c0392b; color:white; border:none; padding:5px 10px; }
-
-/* PRICE INPUT */
-.price-input {
-    width:80px;
-    text-align:center;
-    border:1px solid #a88a78;
-    border-radius:5px;
-    padding:3px;
+.item-card img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 10px;
 }
-.price-input:focus {
-    outline:2px solid #4b3a2a;
+.item-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 8px;
+}
+.item-actions button {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    color: white;
+}
+.edit-btn { background: #2e86de; }
+.delete-btn { background: #c0392b; }
+.out-stock { border: 2px solid #c0392b; }
+.low-stock { border: 2px solid orange; }
+/* SEARCH */
+#openSearchModal {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 1000;
+    padding: 12px 15px;
+    border: none;
+    border-radius: 50px;
+    background: #4b3a2a;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+}
+/* MODAL */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    justify-content: center;
+    align-items: center;
+}
+.modal-content {
+    background: #d8c4ad;
+    padding: 20px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+}
+.modal-close {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    font-size: 22px;
+    cursor: pointer;
 }
 </style>
 </head>
 
 <body>
 
+<!-- TOPBAR -->
 <div class="topbar">
     <div class="menu-btn">☰</div>
     <h2>Items</h2>
 </div>
 
+<!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
     <a href="dashboard.html">Dashboard</a>
     <a href="items.html">Items</a>
@@ -84,149 +212,187 @@ body::before {
     <a href="#" id="logoutBtn">Logout</a>
 </div>
 
+<!-- MAIN -->
 <div class="main">
 
-<div class="add-section">
-    <input type="text" id="name" placeholder="Item Name">
-    <input type="text" id="description" placeholder="Description">
-    <input type="number" id="stock" placeholder="Stock">
-    <input type="number" id="price" placeholder="Price">
-    <input type="file" id="imageInput">
-    <button onclick="addItem()">Add Item</button>
+    <div class="add-section">
+        <input type="text" id="name" placeholder="Item Name">
+        <input type="text" id="description" placeholder="Description">
+        <input type="number" id="stock" placeholder="Stock">
+        <input type="number" id="price" placeholder="Price">
+        <input type="file" id="imageInput">
+        <img id="preview">
+        <button onclick="addItem()">Add Item</button>
+    </div>
+
+    <h3>Available Items</h3>
+    <div class="items-grid" id="itemsGrid"></div>
+
+    <h3>Out of Stock</h3>
+    <div class="items-grid" id="outOfStockGrid"></div>
+
 </div>
 
-<h3>Available Items</h3>
-<div class="items-grid" id="itemsGrid"></div>
-
-<h3>Out of Stock</h3>
-<div class="items-grid" id="outOfStockGrid"></div>
-
+<!-- SEARCH -->
+<button id="openSearchModal">🔍</button>
+<div class="modal" id="searchModal">
+    <div class="modal-content">
+        <span class="modal-close" id="closeSearchModal">&times;</span>
+        <input type="text" id="searchInputModal" placeholder="Search items...">
+    </div>
 </div>
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
+    const menuBtn = document.querySelector(".menu-btn");
+    const sidebar = document.getElementById("sidebar");
+    const logoutBtn = document.getElementById("logoutBtn");
+    let allItems = [];
+    let previewURL;
 
-const menuBtn = document.querySelector(".menu-btn");
-const sidebar = document.getElementById("sidebar");
-const logoutBtn = document.getElementById("logoutBtn");
+    // --- SIDEBAR TOGGLE ---
+    menuBtn.addEventListener("click", e => { e.stopPropagation(); sidebar.classList.toggle("active"); });
+    sidebar.addEventListener("click", e => e.stopPropagation());
+    document.addEventListener("click", () => sidebar.classList.remove("active"));
 
-menuBtn.onclick = e => { e.stopPropagation(); sidebar.classList.toggle("active"); };
-document.addEventListener("click", () => sidebar.classList.remove("active"));
-
-logoutBtn.onclick = async e => {
-    e.preventDefault();
-    await fetch("/logout",{method:"POST",credentials:"include"});
-    location.replace("login.html");
-};
-
-/* LOAD ITEMS */
-async function loadItems(){
-    const res = await fetch("/api/items");
-    const items = await res.json();
-
-    const grid = document.getElementById("itemsGrid");
-    const outGrid = document.getElementById("outOfStockGrid");
-
-    grid.innerHTML="";
-    outGrid.innerHTML="";
-
-    items.forEach(item=>{
-        const card=document.createElement("div");
-        card.className="item-card";
-
-        card.innerHTML=`
-            <img src="${item.image || 'https://via.placeholder.com/150'}">
-            <h4>${item.name}</h4>
-            <p>${item.description}</p>
-            <p>Stock: ${item.stock}</p>
-            <p>₱<input type="number" class="price-input" value="${item.price}"></p>
-            <div class="item-actions">
-                <button class="edit-btn">Edit</button>
-                <button class="delete-btn">Delete</button>
-            </div>
-        `;
-
-        /* DELETE */
-        card.querySelector(".delete-btn").onclick = async ()=>{
-            await fetch("/api/items/"+item._id,{method:"DELETE"});
-            loadItems();
-        };
-
-        /* EDIT NAME + DESC (PROMPT) */
-        card.querySelector(".edit-btn").onclick = async ()=>{
-            const newName = prompt("New name", item.name);
-            if(!newName) return;
-
-            const newDesc = prompt("New description", item.description);
-            if(newDesc===null) return;
-
-            await fetch("/api/items/"+item._id,{
-                method:"PUT",
-                headers:{"Content-Type":"application/json"},
-                body:JSON.stringify({name:newName,description:newDesc})
-            });
-
-            loadItems();
-        };
-
-        /* PRICE AUTO SAVE */
-        const priceInput = card.querySelector(".price-input");
-
-        async function savePrice(){
-            const newPrice = Number(priceInput.value);
-            if(isNaN(newPrice) || newPrice < 0) return;
-
-            await fetch("/api/items/"+item._id,{
-                method:"PUT",
-                headers:{"Content-Type":"application/json"},
-                body:JSON.stringify({price:newPrice})
-            });
-        }
-
-        // ENTER key
-        priceInput.addEventListener("keydown", e=>{
-            if(e.key==="Enter"){
-                priceInput.blur();
-            }
-        });
-
-        // SAVE on blur
-        priceInput.addEventListener("blur", savePrice);
-
-        if(item.stock>0) grid.appendChild(card);
-        else outGrid.appendChild(card);
+    // --- LOGOUT ---
+    logoutBtn.addEventListener("click", async e => {
+        e.preventDefault();
+        await fetch("/logout", { method:"POST", credentials:"include" });
+        window.location.replace("login.html");
     });
-}
 
-/* ADD ITEM */
-window.addItem = async ()=>{
-    const name=document.getElementById("name").value.trim();
-    const desc=document.getElementById("description").value;
-    const stock=document.getElementById("stock").value;
-    const price=document.getElementById("price").value;
-    const image=document.getElementById("imageInput").files[0];
+    // --- IMAGE PREVIEW ---
+    document.getElementById("imageInput").addEventListener("change", e=>{
+        const file = e.target.files[0];
+        const preview = document.getElementById("preview");
+        if(previewURL) URL.revokeObjectURL(previewURL);
+        if(file){
+            previewURL = URL.createObjectURL(file);
+            preview.src = previewURL;
+            preview.style.display = "block";
+        } else { preview.style.display="none"; }
+    });
 
-    if(!name){ alert("Item name required"); return; }
+    // --- ESCAPE HTML ---
+    function escapeHTML(str){
+        return str.replace(/[&<>"']/g, tag=>({
+            "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+        }[tag]));
+    }
 
-    const form=new FormData();
-    form.append("name",name);
-    form.append("description",desc);
-    form.append("stock",stock);
-    form.append("price",price);
-    if(image) form.append("image",image);
+    // --- LOAD ITEMS ---
+    async function loadItems(){
+        try{
+            const res = await fetch("/api/items",{ credentials:"include" });
+            if(!res.ok) throw new Error("Failed to fetch items");
+            allItems = await res.json();
+            const grid = document.getElementById("itemsGrid");
+            const outGrid = document.getElementById("outOfStockGrid");
+            grid.innerHTML = ""; outGrid.innerHTML = "";
+            allItems.forEach(item=>{
+                const card=document.createElement("div");
+                card.className="item-card";
 
-    await fetch("/api/items",{method:"POST",body:form});
+                const nameSafe = escapeHTML(item.name);
+                const descSafe = escapeHTML(item.description);
 
-    document.getElementById("name").value="";
-    document.getElementById("description").value="";
-    document.getElementById("stock").value="";
-    document.getElementById("price").value="";
-    document.getElementById("imageInput").value="";
+                card.innerHTML=`
+                    <img src="${item.image?'/uploads/'+item.image:'https://via.placeholder.com/150'}">
+                    <h4 class="item-name">${nameSafe}</h4>
+                    <p class="item-desc">${descSafe}</p>
+                    <p>Stock: <input type="number" class="edit-stock" value="${item.stock}" style="width:50px"></p>
+                    <p>₱<input type="number" class="edit-price" value="${item.price}" style="width:60px"></p>
+                    <div class="item-actions">
+                        <button class="edit-btn">Save</button>
+                        <button class="delete-btn">Delete</button>
+                    </div>
+                `;
 
+                if(item.stock===0) card.classList.add("out-stock");
+                else if(item.stock>0 && item.stock<=5) card.classList.add("low-stock");
+
+                if(item.stock>0) grid.appendChild(card);
+                else outGrid.appendChild(card);
+
+                // DELETE
+                card.querySelector(".delete-btn").addEventListener("click", async ()=>{
+                    if(!confirm("Delete this item?")) return;
+                    await fetch("/api/items/"+item._id,{ method:"DELETE", credentials:"include" });
+                    loadItems();
+                });
+
+                // EDIT
+                const editBtn = card.querySelector(".edit-btn");
+                const stockInput = card.querySelector(".edit-stock");
+                const priceInput = card.querySelector(".edit-price");
+                editBtn.addEventListener("click", async ()=>{
+                    const newStock = Number(stockInput.value);
+                    const newPrice = Number(priceInput.value);
+                    if(isNaN(newStock)||isNaN(newPrice)||newStock<0||newPrice<0){ alert("Invalid input"); return; }
+                    await fetch("/api/items/"+item._id,{
+                        method:"PUT",
+                        headers:{"Content-Type":"application/json"},
+                        body:JSON.stringify({ stock:newStock, price:newPrice })
+                    });
+                    loadItems();
+                });
+
+                [stockInput, priceInput].forEach(input=>input.addEventListener("keypress", e=>{
+                    if(e.key==="Enter") editBtn.click();
+                }));
+            });
+        } catch(err){ console.error(err); alert("Error loading items."); }
+    }
     loadItems();
-};
 
-loadItems();
+    // --- ADD ITEM ---
+    window.addItem = async ()=>{
+        const nameVal=document.getElementById("name").value.trim();
+        const descVal=document.getElementById("description").value.trim();
+        const stockVal=Number(document.getElementById("stock").value);
+        const priceVal=Number(document.getElementById("price").value);
+        const imgFile=document.getElementById("imageInput").files[0];
+
+        if(!nameVal||descVal===""||isNaN(stockVal)||isNaN(priceVal)||stockVal<0||priceVal<0){ alert("All fields must be valid"); return; }
+        if(allItems.some(i=>i.name.toLowerCase()===nameVal.toLowerCase())){ alert("Duplicate item name"); return; }
+
+        const form=new FormData();
+        form.append("name",nameVal);
+        form.append("description",descVal);
+        form.append("stock",stockVal);
+        form.append("price",priceVal);
+        if(imgFile) form.append("image",imgFile);
+
+        await fetch("/api/items",{ method:"POST", body:form, credentials:"include" });
+
+        document.getElementById("name").value="";
+        document.getElementById("description").value="";
+        document.getElementById("stock").value="";
+        document.getElementById("price").value="";
+        document.getElementById("imageInput").value="";
+        document.getElementById("preview").style.display="none";
+        document.getElementById("name").focus();
+
+        loadItems();
+    };
+
+    // --- SEARCH MODAL ---
+    const openBtn = document.getElementById("openSearchModal");
+    const modal = document.getElementById("searchModal");
+    const closeBtn = document.getElementById("closeSearchModal");
+    const searchInput = document.getElementById("searchInputModal");
+
+    openBtn.onclick = ()=> modal.style.display="flex";
+    closeBtn.onclick = ()=> modal.style.display="none";
+    window.onclick = e => { if(e.target===modal) modal.style.display="none"; };
+
+    searchInput.addEventListener("input", ()=>{
+        const val=searchInput.value.toLowerCase();
+        document.querySelectorAll(".item-card").forEach(card=>{
+            card.style.display=card.innerText.toLowerCase().includes(val)?"":"none";
+        });
+    });
 });
 </script>
 
