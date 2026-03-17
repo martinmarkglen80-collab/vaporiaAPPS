@@ -154,8 +154,13 @@ body::before {
     color: white;
 }
 
-.edit-btn { background: #2e86de; }
-.delete-btn { background: #c0392b; }
+.edit-btn {
+    background: #2e86de;
+}
+
+.delete-btn {
+    background: #c0392b;
+}
 
 /* SEARCH */
 #openSearchModal {
@@ -273,18 +278,18 @@ document.addEventListener("DOMContentLoaded", () => {
     document.addEventListener("click", () => {
         sidebar.classList.remove("active");
     });
+
+    // LOGOUT
     const logoutBtn = document.getElementById("logoutBtn");
 
-    logoutBtn.addEventListener("click", async (e)=>{
-    e.preventDefault();
-
-    await fetch("/logout",{
-    method:"POST",
-    credentials:"include"
+    logoutBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        await fetch("/logout", {
+            method: "POST",
+            credentials: "include"
+        });
+        window.location.replace("login.html");
     });
-
-window.location.replace("login.html");
-});
 
     // SEARCH
     const openBtn = document.getElementById("openSearchModal");
@@ -301,6 +306,7 @@ window.location.replace("login.html");
 
     searchInput.addEventListener("input", () => {
         const val = searchInput.value.toLowerCase();
+
         document.querySelectorAll(".item-card").forEach(card => {
             const name = card.querySelector("h4").textContent.toLowerCase();
             card.style.display = name.includes(val) ? "block" : "none";
@@ -352,24 +358,59 @@ window.location.replace("login.html");
                 loadItems();
             };
 
-            if (item.stock > 0) grid.appendChild(card);
-            else outGrid.appendChild(card);
+            if (item.stock > 0) {
+                grid.appendChild(card);
+            } else {
+                outGrid.appendChild(card);
+            }
         });
     }
 
     // ADD ITEM
     window.addItem = async () => {
+        const nameInput = document.getElementById("name").value.trim();
+        const descriptionInput = document.getElementById("description").value;
+        const stockInput = document.getElementById("stock").value;
+        const priceInput = document.getElementById("price").value;
+        const imageInput = document.getElementById("imageInput").files[0];
+
+        if (!nameInput) {
+            alert("Item name is required");
+            return;
+        }
+
+        const res = await fetch("/api/items");
+        const items = await res.json();
+
+        const exists = items.some(
+            item => item.name.toLowerCase() === nameInput.toLowerCase()
+        );
+
+        if (exists) {
+            alert("An item with this name already exists!");
+            return;
+        }
+
         const form = new FormData();
-        form.append("name", document.getElementById("name").value);
-        form.append("description", document.getElementById("description").value);
-        form.append("stock", document.getElementById("stock").value);
-        form.append("price", document.getElementById("price").value);
-        form.append("image", document.getElementById("imageInput").files[0]);
+        form.append("name", nameInput);
+        form.append("description", descriptionInput);
+        form.append("stock", stockInput);
+        form.append("price", priceInput);
+
+        if (imageInput) {
+            form.append("image", imageInput);
+        }
 
         await fetch("/api/items", {
             method: "POST",
             body: form
         });
+
+        document.getElementById("name").value = "";
+        document.getElementById("description").value = "";
+        document.getElementById("stock").value = "";
+        document.getElementById("price").value = "";
+        document.getElementById("imageInput").value = "";
 
         loadItems();
     };
