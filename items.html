@@ -122,7 +122,7 @@ body::before {
     color: white;
 }
 
-.edit-btn { background: #2e86de; }
+.save-btn { background: #2e86de; }
 .delete-btn { background: #c0392b; }
 
 #openSearchModal {
@@ -157,11 +157,24 @@ body::before {
     width: 90%;
     max-width: 400px;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 150px;
 }
 
 .modal-close {
-    float: right;
+    align-self: flex-end;
     cursor: pointer;
+}
+
+.price-input {
+    width: 80px;
+    text-align: center;
+    border-radius: 4px;
+    border: 1px solid #aaa;
+    padding: 3px;
 }
 </style>
 </head>
@@ -206,7 +219,7 @@ body::before {
 <div class="modal" id="searchModal">
 <div class="modal-content">
 <span class="modal-close" id="closeSearchModal">&times;</span>
-<input type="text" id="searchInputModal" placeholder="Search items..." style="width: 100%; padding: 8px; margin-top: 10px;">
+<input type="text" id="searchInputModal" placeholder="Search items..." style="width: 80%; padding: 8px; margin-top: 20px;">
 </div>
 </div>
 
@@ -237,26 +250,16 @@ document.getElementById("logoutBtn").onclick = async () => {
 const modal = document.getElementById("searchModal");
 const closeBtn = document.getElementById("closeSearchModal");
 
-// Open modal on icon click
 document.getElementById("openSearchModal").onclick = (e) => {
     e.stopPropagation();
     modal.style.display = "flex";
 };
 
-// Close modal with X
 closeBtn.onclick = (e) => {
     e.stopPropagation();
     modal.style.display = "none";
 };
 
-// Close modal by clicking outside content
-modal.onclick = (e) => {
-    if(e.target === modal) {
-        modal.style.display = "none";
-    }
-};
-
-// SEARCH FILTER
 document.getElementById("searchInputModal").addEventListener("input", e=>{
     const val = e.target.value.toLowerCase();
     document.querySelectorAll(".item-card").forEach(card=>{
@@ -284,9 +287,9 @@ async function loadItems(){
             <h4>${item.name}</h4>
             <p>${item.description}</p>
             <p>Stock: ${item.stock}</p>
-            <p>₱${item.price}</p>
+            <p>₱ <input type="number" class="price-input" value="${item.price}"></p>
             <div class="item-actions">
-                <button class="edit-btn">Edit</button>
+                <button class="save-btn">Save</button>
                 <button class="delete-btn">Delete</button>
             </div>
         `;
@@ -301,30 +304,21 @@ async function loadItems(){
             loadItems();
         };
 
-        // EDIT
-        card.querySelector(".edit-btn").onclick = async ()=>{
-            const name = prompt("New name", item.name);
-            if(name===null) return;
+        // SAVE
+        card.querySelector(".save-btn").onclick = async ()=>{
+            const newPrice = parseFloat(card.querySelector(".price-input").value);
+            if(isNaN(newPrice)) { alert("Invalid price"); return; }
 
-            const desc = prompt("New description", item.description);
-            if(desc===null) return;
-
-            const price = prompt("New price", item.price);
-            if(price===null || isNaN(price)) return;
-
-            const res = await fetch("/api/items/"+Number(item._id),{
+            const res = await fetch("/api/items/"+item._id,{
                 method:"PUT",
                 headers:{"Content-Type":"application/json"},
                 credentials:"include",
-                body:JSON.stringify({
-                    name,
-                    description:desc,
-                    price:Number(price)
+                body: JSON.stringify({
+                    price: newPrice
                 })
             });
 
             if(!res.ok){ alert("Update failed"); return; }
-
             loadItems();
         };
 
@@ -349,11 +343,9 @@ window.addItem = async ()=>{
     if(file) form.append("image",file);
 
     await fetch("/api/items",{method:"POST",body:form,credentials:"include"});
-
     loadItems();
 };
 
-// Initial load
 loadItems();
 
 });
