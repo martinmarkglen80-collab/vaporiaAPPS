@@ -12,7 +12,6 @@ body {
     background: #d8c4ad;
     position: relative;
 }
-
 body::before {
     content: "";
     position: fixed;
@@ -27,7 +26,6 @@ body::before {
     pointer-events: none;
     z-index: 0;
 }
-
 /* TOPBAR */
 .topbar {
     padding: 15px;
@@ -37,13 +35,11 @@ body::before {
     position: relative;
     z-index: 1;
 }
-
 .menu-btn {
     font-size: 26px;
     cursor: pointer;
     margin-right: 20px;
 }
-
 /* SIDEBAR */
 .sidebar {
     position: fixed;
@@ -56,7 +52,6 @@ body::before {
     transition: 0.3s;
     z-index: 9999;
 }
-
 .sidebar a {
     display: block;
     padding: 15px;
@@ -64,23 +59,19 @@ body::before {
     color: #4b3a2a;
     font-size: 18px;
 }
-
 .sidebar a:hover {
     background: rgba(143,123,101,0.9);
     color: white;
 }
-
 .sidebar.active {
     left: 0;
 }
-
 /* MAIN */
 .main {
     padding: 30px;
     position: relative;
     z-index: 1;
 }
-
 /* ADD SECTION */
 .add-section {
     background: rgba(200,180,150,0.95);
@@ -92,13 +83,11 @@ body::before {
     gap: 10px;
     align-items: center;
 }
-
 .add-section input {
     padding: 8px;
     border-radius: 5px;
     border: 1px solid #a88a78;
 }
-
 .add-section button {
     padding: 8px 15px;
     background: #4b3a2a;
@@ -107,11 +96,15 @@ body::before {
     border-radius: 5px;
     cursor: pointer;
 }
-
 .add-section button:hover {
     background: #2e1f13;
 }
-
+/* IMAGE PREVIEW */
+#preview {
+    width: 100px;
+    display: none;
+    margin-left: 10px;
+}
 /* ITEMS */
 .items-grid {
     display: flex;
@@ -119,7 +112,6 @@ body::before {
     gap: 20px;
     padding-bottom: 10px;
 }
-
 .item-card {
     min-width: 200px;
     flex: 0 0 auto;
@@ -130,7 +122,6 @@ body::before {
     color: #4b3a2a;
     box-shadow: 0 4px 12px rgba(0,0,0,0.25);
 }
-
 .item-card img {
     width: 100%;
     height: 150px;
@@ -138,14 +129,12 @@ body::before {
     border-radius: 8px;
     margin-bottom: 10px;
 }
-
 .item-actions {
     display: flex;
     justify-content: center;
     gap: 10px;
     margin-top: 8px;
 }
-
 .item-actions button {
     padding: 5px 10px;
     border: none;
@@ -153,15 +142,10 @@ body::before {
     cursor: pointer;
     color: white;
 }
-
-.edit-btn {
-    background: #2e86de;
-}
-
-.delete-btn {
-    background: #c0392b;
-}
-
+.edit-btn { background: #2e86de; }
+.delete-btn { background: #c0392b; }
+.out-stock { border: 2px solid #c0392b; }
+.low-stock { border: 2px solid orange; }
 /* SEARCH */
 #openSearchModal {
     position: fixed;
@@ -176,7 +160,6 @@ body::before {
     font-size: 18px;
     cursor: pointer;
 }
-
 /* MODAL */
 .modal {
     display: none;
@@ -190,7 +173,6 @@ body::before {
     justify-content: center;
     align-items: center;
 }
-
 .modal-content {
     background: #d8c4ad;
     padding: 20px;
@@ -202,7 +184,6 @@ body::before {
     gap: 10px;
     position: relative;
 }
-
 .modal-close {
     position: absolute;
     top: 5px;
@@ -240,6 +221,7 @@ body::before {
         <input type="number" id="stock" placeholder="Stock">
         <input type="number" id="price" placeholder="Price">
         <input type="file" id="imageInput">
+        <img id="preview">
         <button onclick="addItem()">Add Item</button>
     </div>
 
@@ -253,7 +235,6 @@ body::before {
 
 <!-- SEARCH -->
 <button id="openSearchModal">🔍</button>
-
 <div class="modal" id="searchModal">
     <div class="modal-content">
         <span class="modal-close" id="closeSearchModal">&times;</span>
@@ -263,160 +244,155 @@ body::before {
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-
     const menuBtn = document.querySelector(".menu-btn");
     const sidebar = document.getElementById("sidebar");
-
-    // SIDEBAR
-    menuBtn.addEventListener("click", e => {
-        e.stopPropagation();
-        sidebar.classList.toggle("active");
-    });
-
-    sidebar.addEventListener("click", e => e.stopPropagation());
-
-    document.addEventListener("click", () => {
-        sidebar.classList.remove("active");
-    });
-
-    // LOGOUT
     const logoutBtn = document.getElementById("logoutBtn");
+    let allItems = [];
+    let previewURL;
 
-    logoutBtn.addEventListener("click", async (e) => {
+    // --- SIDEBAR TOGGLE ---
+    menuBtn.addEventListener("click", e => { e.stopPropagation(); sidebar.classList.toggle("active"); });
+    sidebar.addEventListener("click", e => e.stopPropagation());
+    document.addEventListener("click", () => sidebar.classList.remove("active"));
+
+    // --- LOGOUT ---
+    logoutBtn.addEventListener("click", async e => {
         e.preventDefault();
-        await fetch("/logout", {
-            method: "POST",
-            credentials: "include"
-        });
+        await fetch("/logout", { method:"POST", credentials:"include" });
         window.location.replace("login.html");
     });
 
-    // SEARCH
+    // --- IMAGE PREVIEW ---
+    document.getElementById("imageInput").addEventListener("change", e=>{
+        const file = e.target.files[0];
+        const preview = document.getElementById("preview");
+        if(previewURL) URL.revokeObjectURL(previewURL);
+        if(file){
+            previewURL = URL.createObjectURL(file);
+            preview.src = previewURL;
+            preview.style.display = "block";
+        } else { preview.style.display="none"; }
+    });
+
+    // --- ESCAPE HTML ---
+    function escapeHTML(str){
+        return str.replace(/[&<>"']/g, tag=>({
+            "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+        }[tag]));
+    }
+
+    // --- LOAD ITEMS ---
+    async function loadItems(){
+        try{
+            const res = await fetch("/api/items",{ credentials:"include" });
+            if(!res.ok) throw new Error("Failed to fetch items");
+            allItems = await res.json();
+            const grid = document.getElementById("itemsGrid");
+            const outGrid = document.getElementById("outOfStockGrid");
+            grid.innerHTML = ""; outGrid.innerHTML = "";
+            allItems.forEach(item=>{
+                const card=document.createElement("div");
+                card.className="item-card";
+
+                const nameSafe = escapeHTML(item.name);
+                const descSafe = escapeHTML(item.description);
+
+                card.innerHTML=`
+                    <img src="${item.image?'/uploads/'+item.image:'https://via.placeholder.com/150'}">
+                    <h4 class="item-name">${nameSafe}</h4>
+                    <p class="item-desc">${descSafe}</p>
+                    <p>Stock: <input type="number" class="edit-stock" value="${item.stock}" style="width:50px"></p>
+                    <p>₱<input type="number" class="edit-price" value="${item.price}" style="width:60px"></p>
+                    <div class="item-actions">
+                        <button class="edit-btn">Save</button>
+                        <button class="delete-btn">Delete</button>
+                    </div>
+                `;
+
+                if(item.stock===0) card.classList.add("out-stock");
+                else if(item.stock>0 && item.stock<=5) card.classList.add("low-stock");
+
+                if(item.stock>0) grid.appendChild(card);
+                else outGrid.appendChild(card);
+
+                // DELETE
+                card.querySelector(".delete-btn").addEventListener("click", async ()=>{
+                    if(!confirm("Delete this item?")) return;
+                    await fetch("/api/items/"+item._id,{ method:"DELETE", credentials:"include" });
+                    loadItems();
+                });
+
+                // EDIT
+                const editBtn = card.querySelector(".edit-btn");
+                const stockInput = card.querySelector(".edit-stock");
+                const priceInput = card.querySelector(".edit-price");
+                editBtn.addEventListener("click", async ()=>{
+                    const newStock = Number(stockInput.value);
+                    const newPrice = Number(priceInput.value);
+                    if(isNaN(newStock)||isNaN(newPrice)||newStock<0||newPrice<0){ alert("Invalid input"); return; }
+                    await fetch("/api/items/"+item._id,{
+                        method:"PUT",
+                        headers:{"Content-Type":"application/json"},
+                        body:JSON.stringify({ stock:newStock, price:newPrice })
+                    });
+                    loadItems();
+                });
+
+                [stockInput, priceInput].forEach(input=>input.addEventListener("keypress", e=>{
+                    if(e.key==="Enter") editBtn.click();
+                }));
+            });
+        } catch(err){ console.error(err); alert("Error loading items."); }
+    }
+    loadItems();
+
+    // --- ADD ITEM ---
+    window.addItem = async ()=>{
+        const nameVal=document.getElementById("name").value.trim();
+        const descVal=document.getElementById("description").value.trim();
+        const stockVal=Number(document.getElementById("stock").value);
+        const priceVal=Number(document.getElementById("price").value);
+        const imgFile=document.getElementById("imageInput").files[0];
+
+        if(!nameVal||descVal===""||isNaN(stockVal)||isNaN(priceVal)||stockVal<0||priceVal<0){ alert("All fields must be valid"); return; }
+        if(allItems.some(i=>i.name.toLowerCase()===nameVal.toLowerCase())){ alert("Duplicate item name"); return; }
+
+        const form=new FormData();
+        form.append("name",nameVal);
+        form.append("description",descVal);
+        form.append("stock",stockVal);
+        form.append("price",priceVal);
+        if(imgFile) form.append("image",imgFile);
+
+        await fetch("/api/items",{ method:"POST", body:form, credentials:"include" });
+
+        document.getElementById("name").value="";
+        document.getElementById("description").value="";
+        document.getElementById("stock").value="";
+        document.getElementById("price").value="";
+        document.getElementById("imageInput").value="";
+        document.getElementById("preview").style.display="none";
+        document.getElementById("name").focus();
+
+        loadItems();
+    };
+
+    // --- SEARCH MODAL ---
     const openBtn = document.getElementById("openSearchModal");
     const modal = document.getElementById("searchModal");
     const closeBtn = document.getElementById("closeSearchModal");
     const searchInput = document.getElementById("searchInputModal");
 
-    openBtn.onclick = () => modal.style.display = "flex";
-    closeBtn.onclick = () => modal.style.display = "none";
+    openBtn.onclick = ()=> modal.style.display="flex";
+    closeBtn.onclick = ()=> modal.style.display="none";
+    window.onclick = e => { if(e.target===modal) modal.style.display="none"; };
 
-    window.onclick = e => {
-        if (e.target === modal) modal.style.display = "none";
-    };
-
-    searchInput.addEventListener("input", () => {
-        const val = searchInput.value.toLowerCase();
-
-        document.querySelectorAll(".item-card").forEach(card => {
-            const name = card.querySelector("h4").textContent.toLowerCase();
-            card.style.display = name.includes(val) ? "block" : "none";
+    searchInput.addEventListener("input", ()=>{
+        const val=searchInput.value.toLowerCase();
+        document.querySelectorAll(".item-card").forEach(card=>{
+            card.style.display=card.innerText.toLowerCase().includes(val)?"":"none";
         });
     });
-
-    // LOAD ITEMS
-    async function loadItems() {
-        const res = await fetch("/api/items");
-        const items = await res.json();
-
-        const grid = document.getElementById("itemsGrid");
-        const outGrid = document.getElementById("outOfStockGrid");
-
-        grid.innerHTML = "";
-        outGrid.innerHTML = "";
-
-        items.forEach(item => {
-            const card = document.createElement("div");
-            card.className = "item-card";
-
-            card.innerHTML = `
-                <img src="${item.image || 'https://via.placeholder.com/150'}">
-                <h4>${item.name}</h4>
-                <p>${item.description}</p>
-                <p>Stock: ${item.stock}</p>
-                <p>₱${item.price}</p>
-                <div class="item-actions">
-                    <button class="edit-btn">Edit</button>
-                    <button class="delete-btn">Delete</button>
-                </div>
-            `;
-
-            card.querySelector(".delete-btn").onclick = async () => {
-                await fetch("/api/items/" + item._id, { method: "DELETE" });
-                loadItems();
-            };
-
-            card.querySelector(".edit-btn").onclick = async () => {
-                const name = prompt("New name", item.name);
-                if (!name) return;
-
-                await fetch("/api/items/" + item._id, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ name })
-                });
-
-                loadItems();
-            };
-
-            if (item.stock > 0) {
-                grid.appendChild(card);
-            } else {
-                outGrid.appendChild(card);
-            }
-        });
-    }
-
-    // ADD ITEM
-    window.addItem = async () => {
-        const nameInput = document.getElementById("name").value.trim();
-        const descriptionInput = document.getElementById("description").value;
-        const stockInput = document.getElementById("stock").value;
-        const priceInput = document.getElementById("price").value;
-        const imageInput = document.getElementById("imageInput").files[0];
-
-        if (!nameInput) {
-            alert("Item name is required");
-            return;
-        }
-
-        const res = await fetch("/api/items");
-        const items = await res.json();
-
-        const exists = items.some(
-            item => item.name.toLowerCase() === nameInput.toLowerCase()
-        );
-
-        if (exists) {
-            alert("An item with this name already exists!");
-            return;
-        }
-
-        const form = new FormData();
-        form.append("name", nameInput);
-        form.append("description", descriptionInput);
-        form.append("stock", stockInput);
-        form.append("price", priceInput);
-
-        if (imageInput) {
-            form.append("image", imageInput);
-        }
-
-        await fetch("/api/items", {
-            method: "POST",
-            body: form
-        });
-
-        document.getElementById("name").value = "";
-        document.getElementById("description").value = "";
-        document.getElementById("stock").value = "";
-        document.getElementById("price").value = "";
-        document.getElementById("imageInput").value = "";
-
-        loadItems();
-    };
-
-    // INIT
-    loadItems();
 });
 </script>
 
