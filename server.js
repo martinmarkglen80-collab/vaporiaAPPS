@@ -227,6 +227,26 @@ app.delete("/api/items/:id", auth, async (req, res) => {
     await Item.findByIdAndDelete(Number(req.params.id));
     res.json({ message: "Deleted" });
 });
+// UPDATE ITEM
+app.put("/api/items/:id", auth, async (req, res) => {
+    const id = Number(req.params.id);  // because _id is a Number in schema
+    const { name, description, price } = req.body;
+
+    try {
+        const item = await Item.findByIdAndUpdate(
+            id,
+            { name, description, price: Number(price) },
+            { new: true }
+        );
+
+        if (!item) return res.status(404).json({ message: "Item not found" });
+
+        res.json({ message: "Item updated" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Update failed" });
+    }
+});
 
 /* =========================
    SALES API
