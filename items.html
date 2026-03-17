@@ -223,6 +223,7 @@ body::before {
     <a href="sales.html">Sales</a>
     <a href="reports.html">Reports</a>
     <a href="suppliers.html">Suppliers</a>
+    <a href="#" id="logoutBtn">Logout</a>
 </div>
 
 <!-- MAIN -->
@@ -272,6 +273,18 @@ document.addEventListener("DOMContentLoaded", () => {
     document.addEventListener("click", () => {
         sidebar.classList.remove("active");
     });
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    logoutBtn.addEventListener("click", async (e)=>{
+    e.preventDefault();
+
+    await fetch("/logout",{
+    method:"POST",
+    credentials:"include"
+    });
+
+window.location.replace("login.html");
+});
 
     // SEARCH
     const openBtn = document.getElementById("openSearchModal");
