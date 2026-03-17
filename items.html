@@ -140,8 +140,9 @@ body::before {
 .modal {
     display: none; /* hidden initially */
     position: fixed;
-    top:0;
-    left:0;
+    top: 0;
+    left: 0;
+    z-index: 10000;
     width: 100%;
     height: 100%;
     background: rgba(0,0,0,0.5);
@@ -155,6 +156,7 @@ body::before {
     border-radius: 12px;
     width: 90%;
     max-width: 400px;
+    text-align: center;
 }
 
 .modal-close {
@@ -204,7 +206,7 @@ body::before {
 <div class="modal" id="searchModal">
 <div class="modal-content">
 <span class="modal-close" id="closeSearchModal">&times;</span>
-<input type="text" id="searchInputModal" placeholder="Search items...">
+<input type="text" id="searchInputModal" placeholder="Search items..." style="width: 100%; padding: 8px; margin-top: 10px;">
 </div>
 </div>
 
@@ -214,11 +216,13 @@ document.addEventListener("DOMContentLoaded", () => {
 const menuBtn = document.querySelector(".menu-btn");
 const sidebar = document.getElementById("sidebar");
 
+// Sidebar toggle
 menuBtn.onclick = e => {
     e.stopPropagation();
     sidebar.classList.toggle("active");
 };
 
+// Close sidebar on clicking outside
 document.addEventListener("click", () => {
     sidebar.classList.remove("active");
 });
@@ -229,16 +233,30 @@ document.getElementById("logoutBtn").onclick = async () => {
     location.href = "login.html";
 };
 
-// SEARCH
+// SEARCH MODAL
 const modal = document.getElementById("searchModal");
-document.getElementById("openSearchModal").onclick = () => {
-    modal.style.display="flex";
-};
-document.getElementById("closeSearchModal").onclick = () => {
-    modal.style.display="none";
+const closeBtn = document.getElementById("closeSearchModal");
+
+// Open modal on icon click
+document.getElementById("openSearchModal").onclick = (e) => {
+    e.stopPropagation();
+    modal.style.display = "flex";
 };
 
-// SEARCH INPUT FILTER
+// Close modal with X
+closeBtn.onclick = (e) => {
+    e.stopPropagation();
+    modal.style.display = "none";
+};
+
+// Close modal by clicking outside content
+modal.onclick = (e) => {
+    if(e.target === modal) {
+        modal.style.display = "none";
+    }
+};
+
+// SEARCH FILTER
 document.getElementById("searchInputModal").addEventListener("input", e=>{
     const val = e.target.value.toLowerCase();
     document.querySelectorAll(".item-card").forEach(card=>{
@@ -294,7 +312,7 @@ async function loadItems(){
             const price = prompt("New price", item.price);
             if(price===null || isNaN(price)) return;
 
-            const res = await fetch("/api/items/"+item._id,{
+            const res = await fetch("/api/items/"+Number(item._id),{
                 method:"PUT",
                 headers:{"Content-Type":"application/json"},
                 credentials:"include",
@@ -335,6 +353,7 @@ window.addItem = async ()=>{
     loadItems();
 };
 
+// Initial load
 loadItems();
 
 });
