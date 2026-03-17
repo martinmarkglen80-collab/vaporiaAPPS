@@ -80,21 +80,6 @@ body::before {
     flex-wrap: wrap;
 }
 
-/* FIXED ADD BUTTON */
-.add-section button {
-    padding: 8px 15px;
-    background: #4b3a2a;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.add-section button:hover {
-    background: #2e1f13;
-}
-
 .items-grid {
     display: flex;
     overflow-x: auto;
@@ -327,13 +312,6 @@ window.addItem = async ()=>{
     if(file) form.append("image",file);
 
     await fetch("/api/items",{method:"POST",body:form,credentials:"include"});
-
-    // Reset fields
-    document.getElementById("name").value="";
-    document.getElementById("description").value="";
-    document.getElementById("stock").value="";
-    document.getElementById("price").value="";
-    document.getElementById("imageInput").value="";
 
     loadItems();
 };
