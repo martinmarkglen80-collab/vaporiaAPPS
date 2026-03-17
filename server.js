@@ -198,7 +198,7 @@ app.post("/api/items", auth, upload.single("image"), async (req, res) => {
         description: req.body.description,
         stock: Number(req.body.stock),
         price: Number(req.body.price),
-        image: req.file ? `/uploads/${req.file.filename}` : ""
+        image: req.file ? `/uploads/${req.file.filename}` : null
     });
 
     await item.save();
@@ -206,145 +206,45 @@ app.post("/api/items", auth, upload.single("image"), async (req, res) => {
 });
 
 app.put("/api/items/:id", auth, upload.single("image"), async (req, res) => {
-    const id = Number(req.params.id);
-
-    const update = {
+    const updates = {
         name: req.body.name,
         description: req.body.description,
-        stock: Number(req.body.stock),
         price: Number(req.body.price)
+        // stock is intentionally not included
     };
 
     if (req.file) {
-        update.image = `/uploads/${req.file.filename}`;
+        updates.image = `/uploads/${req.file.filename}`;
     }
 
-    await Item.findByIdAndUpdate(id, update);
-    res.json({ message: "Updated" });
-});
+    const updatedItem = await Item.findByIdAndUpdate(
+        req.params.id,
+        updates,
+        { new: true }
+    );
 
-app.delete("/api/items/:id", auth, async (req, res) => {
-    await Item.findByIdAndDelete(Number(req.params.id));
-    res.json({ message: "Deleted" });
-});
-
-/* =========================
-   SALES API
-========================= */
-app.get("/api/sales", auth, async (req, res) => {
-    res.json(await Sale.find().sort({ date: -1 }));
-});
-
-app.post("/api/sales", auth, async (req, res) => {
-    const itemData = await Item.findById(req.body.item);
-
-    if (!itemData) {
+    if (!updatedItem) {
         return res.status(404).json({ message: "Item not found" });
     }
 
-    if (itemData.stock < req.body.quantity) {
-        return res.status(400).json({ message: "Not enough stock" });
+    res.json(updatedItem);
+});
+
+app.delete("/api/items/:id", auth, async (req, res) => {
+    const deletedItem = await Item.findByIdAndDelete(req.params.id);
+
+    if (!deletedItem) {
+        return res.status(404).json({ message: "Item not found" });
     }
 
-    itemData.stock -= req.body.quantity;
-    await itemData.save();
-
-    const total = itemData.price * req.body.quantity;
-
-    const sale = new Sale({
-        _id: await getNextSequence("sales"),
-        item: itemData._id,
-        itemName: itemData.name,
-        quantity: req.body.quantity,
-        price: itemData.price,
-        total
-    });
-
-    await sale.save();
-    res.json(sale);
-});
-
-app.delete("/api/sales/:id", auth, async (req, res) => {
-    await Sale.findByIdAndDelete(Number(req.params.id));
     res.json({ message: "Deleted" });
 });
 
 /* =========================
-   SUPPLIERS API
-========================= */
-app.get("/api/suppliers", auth, async (req, res) => {
-    res.json(await Supplier.find());
-});
-
-app.post("/api/suppliers", auth, async (req, res) => {
-    const supplier = new Supplier({
-        _id: await getNextSequence("suppliers"),
-        name: req.body.name,
-        contact: req.body.contact
-    });
-
-    await supplier.save();
-    res.json(supplier);
-});
-
-app.put("/api/suppliers/:id", auth, async (req, res) => {
-    await Supplier.findByIdAndUpdate(Number(req.params.id), req.body);
-    res.json({ message: "Updated" });
-});
-
-app.delete("/api/suppliers/:id", auth, async (req, res) => {
-    await Supplier.findByIdAndDelete(Number(req.params.id));
-    res.json({ message: "Deleted" });
-});
-
-/* =========================
-   REPORTS API
-========================= */
-app.get("/api/reports", auth, async (req, res) => {
-    res.json(await Report.find().sort({ date: -1 }));
-});
-
-app.post("/api/reports", auth, async (req, res) => {
-    const report = new Report({
-        _id: await getNextSequence("reports"),
-        name: req.body.name
-    });
-
-    await report.save();
-    res.json(report);
-});
-
-app.put("/api/reports/:id", auth, async (req, res) => {
-    await Report.findByIdAndUpdate(Number(req.params.id), req.body);
-    res.json({ message: "Updated" });
-});
-
-app.delete("/api/reports/:id", auth, async (req, res) => {
-    await Report.findByIdAndDelete(Number(req.params.id));
-    res.json({ message: "Deleted" });
-});
-
-/* =========================
-   DASHBOARD API
-========================= */
-app.get("/api/dashboard", auth, async (req, res) => {
-    const items = await Item.find();
-    const sales = await Sale.find();
-
-    res.json({
-        totalItems: items.length,
-        availableItems: items.filter(i => i.stock > 0).length,
-        outOfStock: items.filter(i => i.stock <= 0).length,
-        totalSales: sales.length,
-        totalRevenue: sales.reduce((sum, s) => sum + (s.total || 0), 0)
-    });
-});
-
-/* =========================
-   SERVER START
+   START SERVER
 ========================= */
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-    console.log("🚀 Server running on port " + PORT);
+    console.log(`✅ Server running on port ${PORT}`);
 });
