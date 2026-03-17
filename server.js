@@ -185,9 +185,6 @@ app.post("/logout", (req, res) => {
 /* =========================
    ITEMS API
 ========================= */
-
-const fs = require("fs");
-
 // GET all items
 app.get("/api/items", auth, async (req, res) => {
     try {
