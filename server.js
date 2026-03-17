@@ -229,12 +229,12 @@ app.delete("/api/items/:id", auth, async (req, res) => {
 });
 // UPDATE ITEM
 app.put("/api/items/:id", auth, async (req, res) => {
-    const id = Number(req.params.id);  // because _id is a Number in schema
+    const id = Number(req.params.id); // Convert id to Number
     const { name, description, price } = req.body;
 
     try {
-        const item = await Item.findByIdAndUpdate(
-            id,
+        const item = await Item.findOneAndUpdate(
+            { _id: id }, // use findOneAndUpdate instead of findByIdAndUpdate
             { name, description, price: Number(price) },
             { new: true }
         );

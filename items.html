@@ -138,14 +138,16 @@ body::before {
 }
 
 .modal {
-    display: none;              /* hidden initially */
+    display: none;              
     position: fixed;
     z-index: 10000;
     width: 100%;
     height: 100%;
     background: rgba(0,0,0,0.5);
-    justify-content: center;
-    align-items: center;
+
+    display: flex;             
+    justify-content: center;   
+    align-items: center;       
 }
 
 .modal-content {
@@ -154,6 +156,7 @@ body::before {
     border-radius: 12px;
     width: 90%;
     max-width: 400px;
+    margin: 0;              
 }
 
 .modal-close {
@@ -230,9 +233,14 @@ document.getElementById("logoutBtn").onclick = async () => {
 
 // SEARCH
 const modal = document.getElementById("searchModal");
-document.getElementById("openSearchModal").onclick = () => modal.style.display="flex";
-document.getElementById("closeSearchModal").onclick = () => modal.style.display="none";
+document.getElementById("openSearchModal").onclick = () => {
+    modal.style.display="flex";
+};
+document.getElementById("closeSearchModal").onclick = () => {
+    modal.style.display="none";
+};
 
+// SEARCH FUNCTIONALITY
 document.getElementById("searchInputModal").addEventListener("input", e=>{
     const val = e.target.value.toLowerCase();
     document.querySelectorAll(".item-card").forEach(card=>{
@@ -288,7 +296,7 @@ async function loadItems(){
             const price = prompt("New price", item.price);
             if(price===null || isNaN(price)) return;
 
-            const res = await fetch("/api/items/"+Number(item._id),{
+            const res = await fetch("/api/items/"+item._id,{
                 method:"PUT",
                 headers:{"Content-Type":"application/json"},
                 credentials:"include",
