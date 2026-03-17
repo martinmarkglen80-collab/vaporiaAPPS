@@ -80,6 +80,19 @@ body::before {
     flex-wrap: wrap;
 }
 
+.add-section input, .add-section button {
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    padding: 8px;
+}
+
+.add-section button {
+    background: #4b3a2a;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
 .items-grid {
     display: flex;
     overflow-x: auto;
@@ -125,12 +138,13 @@ body::before {
 }
 
 .modal {
-    display: none;
+    display: none;              /* hidden initially */
     position: fixed;
     z-index: 10000;
     width: 100%;
     height: 100%;
     background: rgba(0,0,0,0.5);
+    display: flex;              /* flex for centering */
     justify-content: center;
     align-items: center;
 }
@@ -243,7 +257,7 @@ async function loadItems(){
         card.className="item-card";
 
         card.innerHTML=`
-            <img src="${item.image ? '/uploads/'+item.image : 'https://via.placeholder.com/150'}">
+            <img src="${item.image ? item.image : 'https://via.placeholder.com/150'}">
             <h4>${item.name}</h4>
             <p>${item.description}</p>
             <p>Stock: ${item.stock}</p>
@@ -264,7 +278,7 @@ async function loadItems(){
             loadItems();
         };
 
-        // EDIT (NO STOCK)
+        // EDIT
         card.querySelector(".edit-btn").onclick = async ()=>{
             const name = prompt("New name", item.name);
             if(name===null) return;
@@ -275,7 +289,7 @@ async function loadItems(){
             const price = prompt("New price", item.price);
             if(price===null || isNaN(price)) return;
 
-            const res = await fetch("/api/items/"+item._id,{
+            const res = await fetch("/api/items/"+Number(item._id),{
                 method:"PUT",
                 headers:{"Content-Type":"application/json"},
                 credentials:"include",
