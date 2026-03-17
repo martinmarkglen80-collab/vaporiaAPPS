@@ -185,6 +185,9 @@ app.post("/logout", (req, res) => {
 /* =========================
    ITEMS API
 ========================= */
+
+const fs = require("fs");
+
 // GET all items
 app.get("/api/items", auth, async (req, res) => {
     try {
@@ -213,6 +216,7 @@ app.post("/api/items", auth, upload.single("image"), async (req, res) => {
         res.json(item);
 
     } catch (err) {
+        console.error(err);
         res.status(500).json({ message: "Add failed" });
     }
 });
@@ -221,15 +225,35 @@ app.post("/api/items", auth, upload.single("image"), async (req, res) => {
 app.put("/api/items/:id", auth, async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, description, price } = req.body;
+        const updateFields = {};
 
-        if (!name || !description || price === undefined || isNaN(price)) {
-            return res.status(400).json({ message: "Invalid input" });
+        if (req.body.name !== undefined) {
+            updateFields.name = req.body.name;
+        }
+
+        if (req.body.description !== undefined) {
+            updateFields.description = req.body.description;
+        }
+
+        if (req.body.price !== undefined) {
+            const price = Number(req.body.price);
+            if (isNaN(price)) {
+                return res.status(400).json({ message: "Invalid price" });
+            }
+            updateFields.price = price;
+        }
+
+        if (req.body.stock !== undefined) {
+            const stock = Number(req.body.stock);
+            if (isNaN(stock)) {
+                return res.status(400).json({ message: "Invalid stock" });
+            }
+            updateFields.stock = stock;
         }
 
         const updated = await Item.findOneAndUpdate(
             { _id: Number(id) },
-            { name, description, price: Number(price) },
+            updateFields,
             { new: true }
         );
 
@@ -240,6 +264,7 @@ app.put("/api/items/:id", auth, async (req, res) => {
         res.json(updated);
 
     } catch (err) {
+        console.error(err);
         res.status(500).json({ message: "Update failed" });
     }
 });
@@ -263,6 +288,7 @@ app.delete("/api/items/:id", auth, async (req, res) => {
         res.json({ message: "Deleted" });
 
     } catch (err) {
+        console.error(err);
         res.status(500).json({ message: "Delete failed" });
     }
 });
