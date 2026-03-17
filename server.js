@@ -185,47 +185,89 @@ app.post("/logout", (req, res) => {
 /* =========================
    ITEMS API
 ========================= */
+
+const fs = require("fs");
+
+// GET all items
 app.get("/api/items", auth, async (req, res) => {
-    res.json(await Item.find());
-});
-
-app.post("/api/items", auth, upload.single("image"), async (req, res) => {
-    const _id = await getNextSequence("items");
-
-    const item = new Item({
-        _id,
-        name: req.body.name,
-        description: req.body.description,
-        stock: Number(req.body.stock),
-        price: Number(req.body.price),
-        image: req.file ? `/uploads/${req.file.filename}` : ""
-    });
-
-    await item.save();
-    res.json(item);
-});
-
-app.put("/api/items/:id", auth, upload.single("image"), async (req, res) => {
-    const id = Number(req.params.id);
-
-    const update = {
-        name: req.body.name,
-        description: req.body.description,
-        stock: Number(req.body.stock),
-        price: Number(req.body.price)
-    };
-
-    if (req.file) {
-        update.image = `/uploads/${req.file.filename}`;
+    try {
+        const items = await Item.find();
+        res.json(items);
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
     }
-
-    await Item.findByIdAndUpdate(id, update);
-    res.json({ message: "Updated" });
 });
 
+// POST add new item
+app.post("/api/items", auth, upload.single("image"), async (req, res) => {
+    try {
+        const _id = await getNextSequence("items");
+
+        const item = new Item({
+            _id,
+            name: req.body.name,
+            description: req.body.description,
+            stock: Number(req.body.stock),
+            price: Number(req.body.price),
+            image: req.file ? `/uploads/${req.file.filename}` : ""
+        });
+
+        await item.save();
+        res.json(item);
+
+    } catch (err) {
+        res.status(500).json({ message: "Add failed" });
+    }
+});
+
+// PUT update existing item
+app.put("/api/items/:id", auth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, description, price } = req.body;
+
+        if (!name || !description || price === undefined || isNaN(price)) {
+            return res.status(400).json({ message: "Invalid input" });
+        }
+
+        const updated = await Item.findOneAndUpdate(
+            { _id: Number(id) },
+            { name, description, price: Number(price) },
+            { new: true }
+        );
+
+        if (!updated) {
+            return res.status(404).json({ message: "Item not found" });
+        }
+
+        res.json(updated);
+
+    } catch (err) {
+        res.status(500).json({ message: "Update failed" });
+    }
+});
+
+// DELETE an item
 app.delete("/api/items/:id", auth, async (req, res) => {
-    await Item.findByIdAndDelete(Number(req.params.id));
-    res.json({ message: "Deleted" });
+    try {
+        const { id } = req.params;
+
+        const deleted = await Item.findOneAndDelete({ _id: Number(id) });
+
+        if (!deleted) {
+            return res.status(404).json({ message: "Item not found" });
+        }
+
+        // delete image file if exists
+        if (deleted.image && fs.existsSync(`.${deleted.image}`)) {
+            fs.unlinkSync(`.${deleted.image}`);
+        }
+
+        res.json({ message: "Deleted" });
+
+    } catch (err) {
+        res.status(500).json({ message: "Delete failed" });
+    }
 });
 
 /* =========================
@@ -341,26 +383,7 @@ app.get("/api/dashboard", auth, async (req, res) => {
 });
 
 
-// UPDATE ITEM
-app.put("/api/items/:id", auth, async (req, res) => {
-    try {
-        const id = Number(req.params.id);
-        const { name, description, price } = req.body;
 
-        const item = await Item.findByIdAndUpdate(
-            id,
-            { name, description, price },
-            { new: true }
-        );
-
-        if (!item) return res.status(404).json({ message: "Item not found" });
-
-        res.json({ message: "Item updated", item });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Update failed" });
-    }
-});
 /* =========================
    SERVER START
 ========================= */
