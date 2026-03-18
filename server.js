@@ -24,14 +24,14 @@ app.use(express.static(__dirname));
 app.use("/uploads", express.static("uploads"));
 
 /* =========================
-   MONGODB CONNECTION
+   DATABASE CONNECTION
 ========================= */
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("✅ MongoDB Connected"))
     .catch(err => console.log("❌ MongoDB Error:", err));
 
 /* =========================
-   MULTER (IMAGE UPLOAD)
+   MULTER CONFIG (UPLOADS)
 ========================= */
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -40,14 +40,14 @@ const storage = multer.diskStorage({
         cb(null, dir);
     },
     filename: (req, file, cb) => {
-        cb(null, Date.now() + "-" + file.originalname);
+        cb(null, `${Date.now()}-${file.originalname}`);
     }
 });
 
 const upload = multer({ storage });
 
 /* =========================
-   COUNTER (NUMERIC IDs)
+   COUNTER (AUTO-INCREMENT)
 ========================= */
 const counterSchema = new mongoose.Schema({
     _id: String,
@@ -80,7 +80,8 @@ const itemSchema = new mongoose.Schema({
     description: String,
     stock: Number,
     price: Number,
-    image: String
+    image: String,
+    user: String
 });
 
 const supplierSchema = new mongoose.Schema({
@@ -136,6 +137,8 @@ function auth(req, res, next) {
 /* =========================
    AUTH ROUTES
 ========================= */
+
+// Register
 app.post("/register", async (req, res) => {
     const { username, email, password } = req.body;
 
@@ -154,6 +157,7 @@ app.post("/register", async (req, res) => {
     res.json({ message: "Registered" });
 });
 
+// Login
 app.post("/login", async (req, res) => {
     const { username, password } = req.body;
 
@@ -177,25 +181,27 @@ app.post("/login", async (req, res) => {
     res.json({ message: "Logged in" });
 });
 
+// Logout
 app.post("/logout", (req, res) => {
     res.clearCookie("token");
     res.json({ message: "Logged out" });
 });
 
 /* =========================
-   ITEMS API
+   ITEMS ROUTES
 ========================= */
-// GET all items
+
+// GET all items (per user)
 app.get("/api/items", auth, async (req, res) => {
     try {
-        const items = await Item.find();
+        const items = await Item.find({ user: req.user.id });
         res.json(items);
-    } catch (err) {
+    } catch {
         res.status(500).json({ message: "Server error" });
     }
 });
 
-// POST add new item
+// CREATE item
 app.post("/api/items", auth, upload.single("image"), async (req, res) => {
     try {
         const _id = await getNextSequence("items");
@@ -206,51 +212,27 @@ app.post("/api/items", auth, upload.single("image"), async (req, res) => {
             description: req.body.description,
             stock: Number(req.body.stock),
             price: Number(req.body.price),
-            image: req.file ? `/uploads/${req.file.filename}` : ""
+            image: req.file ? `/uploads/${req.file.filename}` : "",
+            user: req.user.id
         });
 
         await item.save();
         res.json(item);
 
-    } catch (err) {
-        console.error(err);
+    } catch {
         res.status(500).json({ message: "Add failed" });
     }
 });
 
-// PUT update existing item
+// UPDATE item
 app.put("/api/items/:id", auth, async (req, res) => {
     try {
         const { id } = req.params;
-        const updateFields = {};
-
-        if (req.body.name !== undefined) {
-            updateFields.name = req.body.name;
-        }
-
-        if (req.body.description !== undefined) {
-            updateFields.description = req.body.description;
-        }
-
-        if (req.body.price !== undefined) {
-            const price = Number(req.body.price);
-            if (isNaN(price)) {
-                return res.status(400).json({ message: "Invalid price" });
-            }
-            updateFields.price = price;
-        }
-
-        if (req.body.stock !== undefined) {
-            const stock = Number(req.body.stock);
-            if (isNaN(stock)) {
-                return res.status(400).json({ message: "Invalid stock" });
-            }
-            updateFields.stock = stock;
-        }
+        const { name, description, price } = req.body;
 
         const updated = await Item.findOneAndUpdate(
-            { _id: Number(id) },
-            updateFields,
+            { _id: Number(id), user: req.user.id },
+            { name, description, price: Number(price) },
             { new: true }
         );
 
@@ -260,155 +242,41 @@ app.put("/api/items/:id", auth, async (req, res) => {
 
         res.json(updated);
 
-    } catch (err) {
-        console.error(err);
+    } catch {
         res.status(500).json({ message: "Update failed" });
     }
 });
 
-// DELETE an item
+// DELETE item
 app.delete("/api/items/:id", auth, async (req, res) => {
     try {
         const { id } = req.params;
 
-        const deleted = await Item.findOneAndDelete({ _id: Number(id) });
+        const deleted = await Item.findOneAndDelete({
+            _id: Number(id),
+            user: req.user.id
+        });
 
         if (!deleted) {
             return res.status(404).json({ message: "Item not found" });
         }
 
-        // delete image file if exists
         if (deleted.image && fs.existsSync(`.${deleted.image}`)) {
             fs.unlinkSync(`.${deleted.image}`);
         }
 
         res.json({ message: "Deleted" });
 
-    } catch (err) {
-        console.error(err);
+    } catch {
         res.status(500).json({ message: "Delete failed" });
     }
 });
 
 /* =========================
-   SALES API
-========================= */
-app.get("/api/sales", auth, async (req, res) => {
-    res.json(await Sale.find().sort({ date: -1 }));
-});
-
-app.post("/api/sales", auth, async (req, res) => {
-    const itemData = await Item.findById(req.body.item);
-
-    if (!itemData) {
-        return res.status(404).json({ message: "Item not found" });
-    }
-
-    if (itemData.stock < req.body.quantity) {
-        return res.status(400).json({ message: "Not enough stock" });
-    }
-
-    itemData.stock -= req.body.quantity;
-    await itemData.save();
-
-    const total = itemData.price * req.body.quantity;
-
-    const sale = new Sale({
-        _id: await getNextSequence("sales"),
-        item: itemData._id,
-        itemName: itemData.name,
-        quantity: req.body.quantity,
-        price: itemData.price,
-        total
-    });
-
-    await sale.save();
-    res.json(sale);
-});
-
-app.delete("/api/sales/:id", auth, async (req, res) => {
-    await Sale.findByIdAndDelete(Number(req.params.id));
-    res.json({ message: "Deleted" });
-});
-
-/* =========================
-   SUPPLIERS API
-========================= */
-app.get("/api/suppliers", auth, async (req, res) => {
-    res.json(await Supplier.find());
-});
-
-app.post("/api/suppliers", auth, async (req, res) => {
-    const supplier = new Supplier({
-        _id: await getNextSequence("suppliers"),
-        name: req.body.name,
-        contact: req.body.contact
-    });
-
-    await supplier.save();
-    res.json(supplier);
-});
-
-app.put("/api/suppliers/:id", auth, async (req, res) => {
-    await Supplier.findByIdAndUpdate(Number(req.params.id), req.body);
-    res.json({ message: "Updated" });
-});
-
-app.delete("/api/suppliers/:id", auth, async (req, res) => {
-    await Supplier.findByIdAndDelete(Number(req.params.id));
-    res.json({ message: "Deleted" });
-});
-
-/* =========================
-   REPORTS API
-========================= */
-app.get("/api/reports", auth, async (req, res) => {
-    res.json(await Report.find().sort({ date: -1 }));
-});
-
-app.post("/api/reports", auth, async (req, res) => {
-    const report = new Report({
-        _id: await getNextSequence("reports"),
-        name: req.body.name
-    });
-
-    await report.save();
-    res.json(report);
-});
-
-app.put("/api/reports/:id", auth, async (req, res) => {
-    await Report.findByIdAndUpdate(Number(req.params.id), req.body);
-    res.json({ message: "Updated" });
-});
-
-app.delete("/api/reports/:id", auth, async (req, res) => {
-    await Report.findByIdAndDelete(Number(req.params.id));
-    res.json({ message: "Deleted" });
-});
-
-/* =========================
-   DASHBOARD API
-========================= */
-app.get("/api/dashboard", auth, async (req, res) => {
-    const items = await Item.find();
-    const sales = await Sale.find();
-
-    res.json({
-        totalItems: items.length,
-        availableItems: items.filter(i => i.stock > 0).length,
-        outOfStock: items.filter(i => i.stock <= 0).length,
-        totalSales: sales.length,
-        totalRevenue: sales.reduce((sum, s) => sum + (s.total || 0), 0)
-    });
-});
-
-
-
-/* =========================
    SERVER START
 ========================= */
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-    console.log("🚀 Server running on port " + PORT);
+    console.log(`🚀 Server running on port ${PORT}`);
 });
