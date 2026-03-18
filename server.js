@@ -24,14 +24,14 @@ app.use(express.static(__dirname));
 app.use("/uploads", express.static("uploads"));
 
 /* =========================
-   DATABASE CONNECTION
+   MONGODB CONNECTION
 ========================= */
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("✅ MongoDB Connected"))
     .catch(err => console.log("❌ MongoDB Error:", err));
 
 /* =========================
-   MULTER CONFIG (UPLOADS)
+   MULTER (IMAGE UPLOAD)
 ========================= */
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -40,20 +40,18 @@ const storage = multer.diskStorage({
         cb(null, dir);
     },
     filename: (req, file, cb) => {
-        cb(null, `${Date.now()}-${file.originalname}`);
+        cb(null, Date.now() + "-" + file.originalname);
     }
 });
-
 const upload = multer({ storage });
 
 /* =========================
-   COUNTER (AUTO-INCREMENT)
+   COUNTER (NUMERIC IDs)
 ========================= */
 const counterSchema = new mongoose.Schema({
     _id: String,
     seq: Number
 });
-
 const Counter = mongoose.model("Counter", counterSchema);
 
 async function getNextSequence(name) {
@@ -87,7 +85,8 @@ const itemSchema = new mongoose.Schema({
 const supplierSchema = new mongoose.Schema({
     _id: Number,
     name: String,
-    contact: String
+    contact: String,
+    user: String
 });
 
 const saleSchema = new mongoose.Schema({
@@ -97,13 +96,15 @@ const saleSchema = new mongoose.Schema({
     quantity: Number,
     price: Number,
     total: Number,
-    date: { type: Date, default: Date.now }
+    date: { type: Date, default: Date.now },
+    user: String
 });
 
 const reportSchema = new mongoose.Schema({
     _id: Number,
     name: String,
-    date: { type: Date, default: Date.now }
+    date: { type: Date, default: Date.now },
+    user: String
 });
 
 /* =========================
@@ -121,9 +122,7 @@ const Report = mongoose.model("Report", reportSchema);
 function auth(req, res, next) {
     const token = req.cookies.token;
 
-    if (!token) {
-        return res.status(401).json({ message: "Unauthorized" });
-    }
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -137,8 +136,6 @@ function auth(req, res, next) {
 /* =========================
    AUTH ROUTES
 ========================= */
-
-// Register
 app.post("/register", async (req, res) => {
     const { username, email, password } = req.body;
 
@@ -148,16 +145,10 @@ app.post("/register", async (req, res) => {
 
     const hashed = await bcrypt.hash(password, 10);
 
-    await new User({
-        username,
-        email,
-        password: hashed
-    }).save();
-
+    await new User({ username, email, password: hashed }).save();
     res.json({ message: "Registered" });
 });
 
-// Login
 app.post("/login", async (req, res) => {
     const { username, password } = req.body;
 
@@ -181,102 +172,202 @@ app.post("/login", async (req, res) => {
     res.json({ message: "Logged in" });
 });
 
-// Logout
 app.post("/logout", (req, res) => {
     res.clearCookie("token");
     res.json({ message: "Logged out" });
 });
 
 /* =========================
-   ITEMS ROUTES
+   ITEMS API
 ========================= */
-
-// GET all items (per user)
 app.get("/api/items", auth, async (req, res) => {
-    try {
-        const items = await Item.find({ user: req.user.id });
-        res.json(items);
-    } catch {
-        res.status(500).json({ message: "Server error" });
-    }
+    const items = await Item.find({ user: req.user.id });
+    res.json(items);
 });
 
-// CREATE item
 app.post("/api/items", auth, upload.single("image"), async (req, res) => {
-    try {
-        const _id = await getNextSequence("items");
+    const _id = await getNextSequence("items");
 
-        const item = new Item({
-            _id,
-            name: req.body.name,
-            description: req.body.description,
-            stock: Number(req.body.stock),
-            price: Number(req.body.price),
-            image: req.file ? `/uploads/${req.file.filename}` : "",
-            user: req.user.id
-        });
+    const item = new Item({
+        _id,
+        name: req.body.name,
+        description: req.body.description,
+        stock: Number(req.body.stock),
+        price: Number(req.body.price),
+        image: req.file ? `/uploads/${req.file.filename}` : "",
+        user: req.user.id
+    });
 
-        await item.save();
-        res.json(item);
-
-    } catch {
-        res.status(500).json({ message: "Add failed" });
-    }
+    await item.save();
+    res.json(item);
 });
 
-// UPDATE item
 app.put("/api/items/:id", auth, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { name, description, price } = req.body;
+    const updated = await Item.findOneAndUpdate(
+        { _id: Number(req.params.id), user: req.user.id },
+        req.body,
+        { new: true }
+    );
 
-        const updated = await Item.findOneAndUpdate(
-            { _id: Number(id), user: req.user.id },
-            { name, description, price: Number(price) },
-            { new: true }
-        );
+    if (!updated) return res.status(404).json({ message: "Item not found" });
 
-        if (!updated) {
-            return res.status(404).json({ message: "Item not found" });
-        }
-
-        res.json(updated);
-
-    } catch {
-        res.status(500).json({ message: "Update failed" });
-    }
+    res.json(updated);
 });
 
-// DELETE item
 app.delete("/api/items/:id", auth, async (req, res) => {
-    try {
-        const { id } = req.params;
+    const deleted = await Item.findOneAndDelete({
+        _id: Number(req.params.id),
+        user: req.user.id
+    });
 
-        const deleted = await Item.findOneAndDelete({
-            _id: Number(id),
-            user: req.user.id
-        });
+    if (!deleted) return res.status(404).json({ message: "Item not found" });
 
-        if (!deleted) {
-            return res.status(404).json({ message: "Item not found" });
-        }
-
-        if (deleted.image && fs.existsSync(`.${deleted.image}`)) {
-            fs.unlinkSync(`.${deleted.image}`);
-        }
-
-        res.json({ message: "Deleted" });
-
-    } catch {
-        res.status(500).json({ message: "Delete failed" });
+    if (deleted.image && fs.existsSync(`.${deleted.image}`)) {
+        fs.unlinkSync(`.${deleted.image}`);
     }
+
+    res.json({ message: "Deleted" });
+});
+
+/* =========================
+   SALES API
+========================= */
+app.get("/api/sales", auth, async (req, res) => {
+    res.json(await Sale.find({ user: req.user.id }).sort({ date: -1 }));
+});
+
+app.post("/api/sales", auth, async (req, res) => {
+    const itemData = await Item.findOne({
+        _id: Number(req.body.item),
+        user: req.user.id
+    });
+
+    if (!itemData || itemData.stock < req.body.quantity) {
+        return res.status(400).json({ message: "Not enough stock" });
+    }
+
+    itemData.stock -= req.body.quantity;
+    await itemData.save();
+
+    const total = itemData.price * req.body.quantity;
+
+    const sale = new Sale({
+        _id: await getNextSequence("sales"),
+        item: itemData._id,
+        itemName: itemData.name,
+        quantity: req.body.quantity,
+        price: itemData.price,
+        total,
+        user: req.user.id
+    });
+
+    await sale.save();
+    res.json(sale);
+});
+
+app.delete("/api/sales/:id", auth, async (req, res) => {
+    await Sale.findOneAndDelete({
+        _id: Number(req.params.id),
+        user: req.user.id
+    });
+
+    res.json({ message: "Deleted" });
+});
+
+/* =========================
+   SUPPLIERS API
+========================= */
+app.get("/api/suppliers", auth, async (req, res) => {
+    res.json(await Supplier.find({ user: req.user.id }));
+});
+
+app.post("/api/suppliers", auth, async (req, res) => {
+    const supplier = new Supplier({
+        _id: await getNextSequence("suppliers"),
+        name: req.body.name,
+        contact: req.body.contact,
+        user: req.user.id
+    });
+
+    await supplier.save();
+    res.json(supplier);
+});
+
+app.put("/api/suppliers/:id", auth, async (req, res) => {
+    await Supplier.findOneAndUpdate(
+        { _id: Number(req.params.id), user: req.user.id },
+        req.body
+    );
+
+    res.json({ message: "Updated" });
+});
+
+app.delete("/api/suppliers/:id", auth, async (req, res) => {
+    await Supplier.findOneAndDelete({
+        _id: Number(req.params.id),
+        user: req.user.id
+    });
+
+    res.json({ message: "Deleted" });
+});
+
+/* =========================
+   REPORTS API
+========================= */
+app.get("/api/reports", auth, async (req, res) => {
+    res.json(await Report.find({ user: req.user.id }).sort({ date: -1 }));
+});
+
+app.post("/api/reports", auth, async (req, res) => {
+    const report = new Report({
+        _id: await getNextSequence("reports"),
+        name: req.body.name,
+        user: req.user.id
+    });
+
+    await report.save();
+    res.json(report);
+});
+
+app.put("/api/reports/:id", auth, async (req, res) => {
+    await Report.findOneAndUpdate(
+        { _id: Number(req.params.id), user: req.user.id },
+        req.body
+    );
+
+    res.json({ message: "Updated" });
+});
+
+app.delete("/api/reports/:id", auth, async (req, res) => {
+    await Report.findOneAndDelete({
+        _id: Number(req.params.id),
+        user: req.user.id
+    });
+
+    res.json({ message: "Deleted" });
+});
+
+/* =========================
+   DASHBOARD API
+========================= */
+app.get("/api/dashboard", auth, async (req, res) => {
+    const items = await Item.find({ user: req.user.id });
+    const sales = await Sale.find({ user: req.user.id });
+
+    res.json({
+        totalItems: items.length,
+        availableItems: items.filter(i => i.stock > 0).length,
+        outOfStock: items.filter(i => i.stock <= 0).length,
+        totalSales: sales.length,
+        totalRevenue: sales.reduce((sum, s) => sum + (s.total || 0), 0)
+    });
 });
 
 /* =========================
    SERVER START
 ========================= */
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
+    console.log("🚀 Server running on port " + PORT);
 });
