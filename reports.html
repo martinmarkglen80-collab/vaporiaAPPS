@@ -198,7 +198,19 @@ border:1px solid #a88a78;
 </table>
 
 </div>
-
+<script>
+(async () => {
+    try {
+        const res = await fetch("/api/dashboard", { credentials: "include" });
+        if (res.status === 401) {
+            window.location.replace("login.html");
+        }
+    } catch (err) {
+        console.error(err);
+        window.location.replace("login.html");
+    }
+})();
+</script>
 <script>
   // Redirect to login if user tries to go back after logout
   if (window.history && window.history.pushState) {
