@@ -158,13 +158,6 @@
       </div>
     </div>
   </div>
-
-<script>
-  // Prevent access if no login token exists
-  if (!document.cookie.split("; ").some(c => c.trim().startsWith("token="))) {
-    window.location.replace("login.html"); // Redirect to login
-  }
-</script>
   <script>
 document.getElementById('registerForm').addEventListener('submit', async function(e) {
   e.preventDefault();

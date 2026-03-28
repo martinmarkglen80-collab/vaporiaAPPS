@@ -208,15 +208,15 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-  logoutBtn.addEventListener("click", async e => {
+    /* LOGOUT */
+   logoutBtn.addEventListener("click", async e => {
   e.preventDefault();
-
-  // Logout on server
   await fetch("/logout", { method: "POST", credentials: "include" });
 
-  // Redirect to login and remove current page from history
+  // Replace history so back button can't go back
   window.location.replace("login.html");
 });
+
     /* NUMBERS ONLY CONTACT */
     supplierContactInput.addEventListener("input", () => {
         supplierContactInput.value = supplierContactInput.value.replace(/[^0-9]/g, '');
