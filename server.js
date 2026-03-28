@@ -103,7 +103,7 @@ const saleSchema = new mongoose.Schema({
 const reportSchema = new mongoose.Schema({
     _id: Number,
     name: String,
-    type: String,
+    type: { type: String, default: "manual" }, // <-- THIS IS WHERE IT GOES
     date: { type: Date, default: Date.now },
     user: String
 });
@@ -362,15 +362,22 @@ app.get("/api/reports", auth, async (req, res) => {
 });
 
 app.post("/api/reports", auth, async (req, res) => {
-    const report = new Report({
-    _id: reportId,
-    name: `Refunded: ${sale.itemName} (Qty: ${sale.quantity})`,
-    type: "refund",
-    user: req.user.id
-    });
+    try {
+        const reportId = await getNextSequence("reports");
 
-    await report.save();
-    res.json(report);
+        const report = new Report({
+            _id: reportId,
+            name: req.body.name,       // <- use frontend input
+            type: "manual",            // <- mark manual reports
+            user: req.user.id
+        });
+
+        await report.save();
+        res.json(report);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Failed to add report" });
+    }
 });
 
 app.put("/api/reports/:id", auth, async (req, res) => {
