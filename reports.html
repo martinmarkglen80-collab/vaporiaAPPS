@@ -199,7 +199,16 @@ border:1px solid #a88a78;
 
 </div>
 
-
+<script>
+  // Redirect to login if user tries to go back after logout
+  if (window.history && window.history.pushState) {
+    window.history.pushState(null, null, window.location.href);
+    window.onpopstate = function () {
+      // Redirect to login page
+      window.location.replace("login.html");
+    };
+  }
+</script>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
