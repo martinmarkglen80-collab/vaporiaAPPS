@@ -148,12 +148,8 @@ body::before {
         </div>
     </div>
 </div>
-<script>
-  // Prevent access if no login token exists
-  if (!document.cookie.split("; ").some(c => c.trim().startsWith("token="))) {
-    window.location.replace("login.html"); // Redirect to login
-  }
-</script>
+
+
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   const menuBtn = document.querySelector(".menu-btn");
@@ -181,15 +177,19 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Logout
-logoutBtn.addEventListener("click", async e => {
-  e.preventDefault();
-
-  // Logout on server
-  await fetch("/logout", { method: "POST", credentials: "include" });
-
-  // Redirect to login and remove current page from history
-  window.location.replace("login.html");
-});
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", async e => {
+      e.preventDefault();
+      e.stopPropagation();
+      try {
+        const res = await fetch("/logout", { method: "POST", credentials: "include" });
+        if (res.ok) window.location.replace("login.html");
+        else console.error("Logout failed:", res.status);
+      } catch (err) {
+        console.error("Logout error:", err);
+      }
+    });
+  }
 
   // Load dashboard data
   async function loadDashboard() {

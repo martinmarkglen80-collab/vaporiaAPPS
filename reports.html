@@ -199,12 +199,7 @@ border:1px solid #a88a78;
 
 </div>
 
-<script>
-  // Prevent access if no login token exists
-  if (!document.cookie.split("; ").some(c => c.trim().startsWith("token="))) {
-    window.location.replace("login.html"); // Redirect to login
-  }
-</script>
+
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -233,15 +228,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // =========================
   // LOGOUT
   // =========================
- logoutBtn.addEventListener("click", async e => {
-  e.preventDefault();
-
-  // Logout on server
-  await fetch("/logout", { method: "POST", credentials: "include" });
-
-  // Redirect to login and remove current page from history
-  window.location.replace("login.html");
-});
+  logoutBtn.addEventListener("click", async e => {
+    e.preventDefault();
+    await fetch("/logout", {
+      method: "POST",
+      credentials: "include"
+    });
+    window.location.replace("login.html");
+  });
 
   // =========================
   // LOAD REPORTS
