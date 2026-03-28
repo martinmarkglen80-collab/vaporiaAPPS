@@ -100,12 +100,13 @@ const saleSchema = new mongoose.Schema({
     user: String
 });
 
-const report = new Report({
-    _id: reportId,
-    name: `Refunded: ${sale.itemName} (Qty: ${sale.quantity})`,
-    type: "refund",
-    user: req.user.id
+const reportSchema = new mongoose.Schema({
+    _id: Number,
+    name: String,
+    date: { type: Date, default: Date.now },
+    user: String
 });
+
 
 /* =========================
    MODELS
@@ -394,9 +395,10 @@ app.get("/api/reports", auth, async (req, res) => {
 
 app.post("/api/reports", auth, async (req, res) => {
     const report = new Report({
-        _id: await getNextSequence("reports"),
-        name: req.body.name,
-        user: req.user.id
+    _id: reportId,
+    name: `Refunded: ${sale.itemName} (Qty: ${sale.quantity})`,
+    type: "refund",
+    user: req.user.id
     });
 
     await report.save();
