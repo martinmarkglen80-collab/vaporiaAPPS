@@ -182,13 +182,10 @@ th {
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  // Redirect to login if token cookie is missing
-  const token = document.cookie.split("; ").find(row => row.startsWith("token="));
-  if (!token) {
-    window.location.replace("login.html");
+  // Prevent access if no login token exists
+  if (!document.cookie.split("; ").some(c => c.trim().startsWith("token="))) {
+    window.location.replace("login.html"); // Redirect to login
   }
-});
 </script>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
@@ -211,13 +208,15 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    /* LOGOUT */
-    logoutBtn.addEventListener("click", async e => {
-        e.preventDefault();
-        await fetch("/logout", { method: "POST", credentials: "include" });
-        window.location.replace("login.html");
-    });
+  logoutBtn.addEventListener("click", async e => {
+  e.preventDefault();
 
+  // Logout on server
+  await fetch("/logout", { method: "POST", credentials: "include" });
+
+  // Redirect to login and remove current page from history
+  window.location.replace("login.html");
+});
     /* NUMBERS ONLY CONTACT */
     supplierContactInput.addEventListener("input", () => {
         supplierContactInput.value = supplierContactInput.value.replace(/[^0-9]/g, '');

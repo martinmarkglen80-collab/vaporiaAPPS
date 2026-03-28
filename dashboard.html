@@ -148,15 +148,11 @@ body::before {
         </div>
     </div>
 </div>
-
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  // Redirect to login if token cookie is missing
-  const token = document.cookie.split("; ").find(row => row.startsWith("token="));
-  if (!token) {
-    window.location.replace("login.html");
+  // Prevent access if no login token exists
+  if (!document.cookie.split("; ").some(c => c.trim().startsWith("token="))) {
+    window.location.replace("login.html"); // Redirect to login
   }
-});
 </script>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
@@ -185,19 +181,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Logout
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", async e => {
-      e.preventDefault();
-      e.stopPropagation();
-      try {
-        const res = await fetch("/logout", { method: "POST", credentials: "include" });
-        if (res.ok) window.location.replace("login.html");
-        else console.error("Logout failed:", res.status);
-      } catch (err) {
-        console.error("Logout error:", err);
-      }
-    });
-  }
+logoutBtn.addEventListener("click", async e => {
+  e.preventDefault();
+
+  // Logout on server
+  await fetch("/logout", { method: "POST", credentials: "include" });
+
+  // Redirect to login and remove current page from history
+  window.location.replace("login.html");
+});
 
   // Load dashboard data
   async function loadDashboard() {

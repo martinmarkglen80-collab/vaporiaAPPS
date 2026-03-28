@@ -159,14 +159,11 @@
     </div>
   </div>
 
-  <script>
-document.addEventListener("DOMContentLoaded", () => {
-  // Redirect to login if token cookie is missing
-  const token = document.cookie.split("; ").find(row => row.startsWith("token="));
-  if (!token) {
-    window.location.replace("login.html");
+<script>
+  // Prevent access if no login token exists
+  if (!document.cookie.split("; ").some(c => c.trim().startsWith("token="))) {
+    window.location.replace("login.html"); // Redirect to login
   }
-});
 </script>
   <script>
 document.getElementById('registerForm').addEventListener('submit', async function(e) {
