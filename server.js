@@ -28,7 +28,10 @@ app.use("/uploads", express.static("uploads"));
 // Prevent back button access to protected pages after logout
 // =========================
 app.use((req, res, next) => {
-    res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
     next();
 });
 
