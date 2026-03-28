@@ -297,11 +297,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // LOGOUT
-    logoutBtn.onclick = async () => {
-        await fetch("/logout", { method: "POST", credentials: "include" });
-        location.href = "login.html";
-    };
-
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", async e => {
+      e.preventDefault();
+      e.stopPropagation();
+      try {
+        const res = await fetch("/logout", { method: "POST", credentials: "include" });
+        if (res.ok) window.location.replace("login.html");
+        else console.error("Logout failed:", res.status);
+      } catch (err) {
+        console.error("Logout error:", err);
+      }
+    });
+  }
     // SEARCH MODAL
     openModal.onclick = e => {
         e.stopPropagation();

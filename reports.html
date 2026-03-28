@@ -237,14 +237,19 @@ document.addEventListener("DOMContentLoaded", () => {
   // =========================
   // LOGOUT
   // =========================
-  logoutBtn.addEventListener("click", async e => {
-    e.preventDefault();
-    await fetch("/logout", {
-      method: "POST",
-      credentials: "include"
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", async e => {
+      e.preventDefault();
+      e.stopPropagation();
+      try {
+        const res = await fetch("/logout", { method: "POST", credentials: "include" });
+        if (res.ok) window.location.replace("login.html");
+        else console.error("Logout failed:", res.status);
+      } catch (err) {
+        console.error("Logout error:", err);
+      }
     });
-    window.location.replace("login.html");
-  });
+  }
 
   // =========================
   // LOAD REPORTS
