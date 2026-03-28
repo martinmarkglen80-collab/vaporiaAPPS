@@ -297,14 +297,19 @@ document.addEventListener("DOMContentLoaded", () => {
         <td><button class="delete-btn">Refund</button></td>
       `;
 
-      // DELETE SALE
+      // REFUND SALE
       tr.querySelector(".delete-btn").addEventListener("click", async () => {
         if (confirm("Confirm refund?")) {
-          const res = await fetch('/api/sales/refund/${s._id}', { method: "POST", credentials: "include" });
+          const res = await fetch(`/api/sales/refund/${s._id}`, {
+            method: "POST",
+            credentials: "include"
+          });
+
           if (!res.ok) {
-            alert("Refund failed: " + (await res.text()));
+            alert("Refund failed");
             return;
           }
+
           loadSales();
           loadItems();
         }
@@ -327,25 +332,20 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Check if quantity exceeds stock
     const selectedOption = itemSelect.selectedOptions[0];
     const stock = parseInt(selectedOption.dataset.stock);
+
     if (quantity > stock) {
       alert("Quantity exceeds available stock");
       return;
     }
 
-    const total = quantity * price;
-
-    // POST sale
     await fetch("/api/sales", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ item: itemId, quantity, price }),
       credentials: "include"
     });
-
-    // Stock is already updated by server in /api/sales, so no need to PUT manually
 
     // Clear form
     itemSelect.value = "";
@@ -356,7 +356,6 @@ document.addEventListener("DOMContentLoaded", () => {
     loadItems();
   }
 
-  // Expose addSale to button onclick
   window.addSale = addSale;
 
   // =========================
