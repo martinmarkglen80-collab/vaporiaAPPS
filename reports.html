@@ -201,6 +201,10 @@ border:1px solid #a88a78;
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
+
+  // =========================
+  // ELEMENTS
+  // =========================
   const tbody = document.getElementById("reportsTable");
   const sidebar = document.getElementById("sidebar");
   const menuBtn = document.querySelector(".menu-btn");
@@ -225,7 +229,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // =========================
   logoutBtn.addEventListener("click", async e => {
     e.preventDefault();
-    await fetch("/logout", { method: "POST", credentials: "include" });
+    await fetch("/logout", {
+      method: "POST",
+      credentials: "include"
+    });
     window.location.replace("login.html");
   });
 
@@ -234,44 +241,62 @@ document.addEventListener("DOMContentLoaded", () => {
   // =========================
   async function loadReports() {
     try {
-      const res = await fetch("/api/reports", { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch reports");
-      const reports = await res.json();
+      const res = await fetch("/api/reports", {
+        credentials: "include"
+      });
 
+      if (!res.ok) throw new Error("Failed to fetch reports");
+
+      const reports = await res.json();
       tbody.innerHTML = "";
 
       reports.forEach(r => {
         const tr = document.createElement("tr");
         const date = new Date(r.date).toLocaleDateString();
+        const isRefund = r.type === "refund";
 
         tr.innerHTML = `
           <td>${r._id}</td>
-          <td><input type="text" value="${r.name}" class="report-name"></td>
+          <td>
+            <input type="text" value="${r.name}" class="report-name"
+            ${isRefund ? "disabled" : ""}>
+          </td>
           <td>${date}</td>
-          <td><button class="delete-btn">Delete</button></td>
+          <td>
+            ${isRefund ? "Locked" : "<button class='delete-btn'>Delete</button>"}
+          </td>
         `;
 
+        // =========================
         // DELETE REPORT
-        tr.querySelector(".delete-btn").addEventListener("click", async () => {
-          if (!confirm("Delete this report?")) return;
-          await fetch(`/api/reports/${r._id}`, {
-            method: "DELETE",
-            credentials: "include"
-          });
-          loadReports();
-        });
+        // =========================
+        if (!isRefund) {
+          tr.querySelector(".delete-btn").addEventListener("click", async () => {
+            if (!confirm("Delete this report?")) return;
 
-        // UPDATE REPORT
-        tr.querySelector(".report-name").addEventListener("change", async () => {
-          const name = tr.querySelector(".report-name").value.trim();
-          if (!name) return;
-          await fetch(`/api/reports/${r._id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name }),
-            credentials: "include"
+            await fetch(`/api/reports/${r._id}`, {
+              method: "DELETE",
+              credentials: "include"
+            });
+
+            loadReports();
           });
-        });
+
+          // =========================
+          // UPDATE REPORT NAME
+          // =========================
+          tr.querySelector(".report-name").addEventListener("change", async () => {
+            const name = tr.querySelector(".report-name").value.trim();
+            if (!name) return;
+
+            await fetch(`/api/reports/${r._id}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ name }),
+              credentials: "include"
+            });
+          });
+        }
 
         tbody.appendChild(tr);
       });
@@ -285,7 +310,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // ADD REPORT
   // =========================
   async function addReport() {
-    const name = document.getElementById("reportName").value.trim();
+    const nameInput = document.getElementById("reportName");
+    const name = nameInput.value.trim();
+
     if (!name) {
       alert("Report name required");
       return;
@@ -298,17 +325,18 @@ document.addEventListener("DOMContentLoaded", () => {
       credentials: "include"
     });
 
-    document.getElementById("reportName").value = "";
+    nameInput.value = "";
     loadReports();
   }
 
-  // Expose addReport to button onclick
+  // Make function available to button
   window.addReport = addReport;
 
   // =========================
   // INITIAL LOAD
   // =========================
   loadReports();
+
 });
 </script>
 

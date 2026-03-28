@@ -100,11 +100,11 @@ const saleSchema = new mongoose.Schema({
     user: String
 });
 
-const reportSchema = new mongoose.Schema({
-    _id: Number,
-    name: String,
-    date: { type: Date, default: Date.now },
-    user: String
+const report = new Report({
+    _id: reportId,
+    name: `Refunded: ${sale.itemName} (Qty: ${sale.quantity})`,
+    type: "refund",
+    user: req.user.id
 });
 
 /* =========================
