@@ -23,18 +23,16 @@ app.use(cookieParser());
 app.use(express.static(__dirname));
 app.use("/uploads", express.static("uploads"));
 
-// =========================
-// NO CACHE MIDDLEWARE
-// Prevent back button access to protected pages after logout
-// =========================
+// Prevent caching of protected pages
 app.use((req, res, next) => {
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-    res.setHeader('Surrogate-Control', 'no-store');
+    if (req.path.startsWith("/dashboard") || req.path.startsWith("/reports") || req.path.startsWith("/items") || req.path.startsWith("/sales")) {
+        res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+        res.setHeader("Pragma", "no-cache");
+        res.setHeader("Expires", "0");
+        res.setHeader("Surrogate-Control", "no-store");
+    }
     next();
 });
-
 /* =========================
    MONGODB CONNECTION
 ========================= */

@@ -150,14 +150,17 @@ body::before {
 </div>
 
 <script>
-  // Redirect to login if user tries to go back after logout
-  if (window.history && window.history.pushState) {
-    window.history.pushState(null, null, window.location.href);
-    window.onpopstate = function () {
-      // Redirect to login page
-      window.location.replace("login.html");
-    };
-  }
+(async () => {
+    try {
+        const res = await fetch("/api/dashboard", { credentials: "include" });
+        if (res.status === 401) {
+            window.location.replace("login.html");
+        }
+    } catch (err) {
+        console.error(err);
+        window.location.replace("login.html");
+    }
+})();
 </script>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
