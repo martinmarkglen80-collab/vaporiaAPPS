@@ -213,6 +213,15 @@ background:#7b241c;
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
+  // Redirect to login if token cookie is missing
+  const token = document.cookie.split("; ").find(row => row.startsWith("token="));
+  if (!token) {
+    window.location.replace("login.html");
+  }
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
   const tbody = document.getElementById("salesTable");
 
   const sidebar = document.getElementById("sidebar");

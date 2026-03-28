@@ -23,12 +23,13 @@ app.use(cookieParser());
 app.use(express.static(__dirname));
 app.use("/uploads", express.static("uploads"));
 
-// =========================
+
 // Prevent caching of protected pages
-// =========================
 app.use((req, res, next) => {
-    res.set("Cache-Control", "no-store"); // prevent caching
-    next();
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
+  res.set("Pragma", "no-cache");
+  res.set("Expires", "0");
+  next();
 });
 
 /* =========================

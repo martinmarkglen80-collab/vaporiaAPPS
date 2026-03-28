@@ -151,6 +151,15 @@ body::before {
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
+  // Redirect to login if token cookie is missing
+  const token = document.cookie.split("; ").find(row => row.startsWith("token="));
+  if (!token) {
+    window.location.replace("login.html");
+  }
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
   const menuBtn = document.querySelector(".menu-btn");
   const sidebar = document.getElementById("sidebar");
   const logoutBtn = document.getElementById("logoutBtn");
