@@ -294,13 +294,17 @@ document.addEventListener("DOMContentLoaded", () => {
         <td>${s.quantity}</td>
         <td>${s.total}</td>
         <td>${date}</td>
-        <td><button class="delete-btn">Delete</button></td>
+        <td><button class="delete-btn">Refund</button></td>
       `;
 
       // DELETE SALE
       tr.querySelector(".delete-btn").addEventListener("click", async () => {
-        if (confirm("Delete this sale?")) {
-          await fetch(`/api/sales/${s._id}`, { method: "DELETE", credentials: "include" });
+        if (confirm("Confirm refund?")) {
+          const res = await fetch('/api/sales/refund/${s._id}', { method: "POST", credentials: "include" });
+          if (!res.ok) {
+            alert("Refund failed: " + (await res.text()));
+            return;
+          }
           loadSales();
           loadItems();
         }

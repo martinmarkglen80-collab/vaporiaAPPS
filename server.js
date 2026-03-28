@@ -311,6 +311,39 @@ app.delete("/api/suppliers/:id", auth, async (req, res) => {
     res.json({ message: "Deleted" });
 });
 
+// =========================
+// REFUND SALE (NO STOCK RETURN)
+// =========================
+app.post("/api/sales/refund/:id", auth, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Find the sale
+        const sale = await Sale.findOne({ _id: Number(id) });
+        if (!sale) {
+            return res.status(404).json({ message: "Sale not found" });
+        }
+
+        // Create refund report log
+        const reportId = await getNextSequence("reports");
+
+        const report = new Report({
+            _id: reportId,
+            name: `Refunded: ${sale.itemName} (Qty: ${sale.quantity})`
+        });
+
+        await report.save();
+
+        // Delete sale record
+        await Sale.findOneAndDelete({ _id: Number(id) });
+
+        res.json({ message: "Refund successful (no stock returned)" });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Refund failed" });
+    }
+});
 /* =========================
    REPORTS API
 ========================= */
