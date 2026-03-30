@@ -427,10 +427,10 @@ document.addEventListener("DOMContentLoaded", () => {
             body: form,
             credentials: "include"
         });
-        if (!res.ok) {
         const data = await res.json();
-        alert(data.message || "Add failed");
-        return;
+        if (!res.ok) {
+            alert(data.message || "Add failed");
+            return;
         }
 
         loadItems();
