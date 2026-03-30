@@ -110,18 +110,19 @@ button:hover { background: #6d5837; }
                 <input type="text" name="username" placeholder="Enter Username..." required>
             </div>
             <div class="form-group" style="position: relative;">
-    <input type="password" id="password" name="password" placeholder="Password" required style="width:100%; padding-right:60px;">
+    <input type="password" id="password" name="password" placeholder="Password" required class="password-input">
     
     <span id="togglePassword" style="
-        position:absolute;
-        right:15px;
-        top:50%;
-        transform:translateY(-50%);
-        cursor:pointer;
-        color:#4b3a2a;
-        font-size:14px;
-        font-weight:bold;
-    ">👁️</span>
+      .form-group input {
+        width: 100%;
+        padding: 12px 15px;
+        border-radius: 25px;
+         border: 1px solid #ccc;
+        outline: none;
+        font-size: 14px;
+        box-sizing: border-box;
+}
+    ">Show</span>
 </div>
 
             <div class="remember">
