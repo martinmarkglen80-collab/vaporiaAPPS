@@ -192,55 +192,96 @@ app.post("/logout", (req, res) => {
 /* =========================
    ITEMS API
 ========================= */
+
+// GET ALL ITEMS
 app.get("/api/items", auth, async (req, res) => {
-    const items = await Item.find({ user: req.user.id });
-    res.json(items);
-});
-
-app.post("/api/items", auth, upload.single("image"), async (req, res) => {
-    const _id = await getNextSequence("items");
-
-    const item = new Item({
-        _id,
-        name: req.body.name,
-        description: req.body.description,
-        stock: Number(req.body.stock),
-        price: Number(req.body.price),
-        image: req.file ? `/uploads/${req.file.filename}` : "",
-        user: req.user.id
-    });
-
-    await item.save();
-    res.json(item);
-});
-
-app.put("/api/items/:id", auth, async (req, res) => {
-    const updated = await Item.findOneAndUpdate(
-        { _id: Number(req.params.id), user: req.user.id },
-        req.body,
-        { new: true }
-    );
-
-    if (!updated) return res.status(404).json({ message: "Item not found" });
-
-    res.json(updated);
-});
-
-app.delete("/api/items/:id", auth, async (req, res) => {
-    const deleted = await Item.findOneAndDelete({
-        _id: Number(req.params.id),
-        user: req.user.id
-    });
-
-    if (!deleted) return res.status(404).json({ message: "Item not found" });
-
-    if (deleted.image && fs.existsSync(`.${deleted.image}`)) {
-        fs.unlinkSync(`.${deleted.image}`);
+    try {
+        const items = await Item.find({ user: req.user.id });
+        res.json(items);
+    } catch (err) {
+        res.status(500).json({ message: "Failed to fetch items" });
     }
-
-    res.json({ message: "Deleted" });
 });
 
+
+// ADD ITEM
+app.post("/api/items", auth, upload.single("image"), async (req, res) => {
+    try {
+        // DUPLICATE CHECK
+        const existing = await Item.findOne({
+            name: req.body.name,
+            user: req.user.id
+        });
+
+        if (existing) {
+            return res.status(400).json({ message: "Item already exists" });
+        }
+
+        const _id = await getNextSequence("items");
+
+        const item = new Item({
+            _id: _id,
+            name: req.body.name,
+            description: req.body.description,
+            stock: Number(req.body.stock),
+            price: Number(req.body.price),
+            image: req.file ? `/uploads/${req.file.filename}` : "",
+            user: req.user.id
+        });
+
+        await item.save();
+        res.json(item);
+
+    } catch (err) {
+        res.status(500).json({ message: "Add failed" });
+    }
+});
+
+
+// UPDATE ITEM
+app.put("/api/items/:id", auth, async (req, res) => {
+    try {
+        const updated = await Item.findOneAndUpdate(
+            { _id: Number(req.params.id), user: req.user.id },
+            req.body,
+            { new: true }
+        );
+
+        if (!updated) {
+            return res.status(404).json({ message: "Item not found" });
+        }
+
+        res.json(updated);
+
+    } catch (err) {
+        res.status(500).json({ message: "Update failed" });
+    }
+});
+
+
+// DELETE ITEM
+app.delete("/api/items/:id", auth, async (req, res) => {
+    try {
+        const deleted = await Item.findOneAndDelete({
+            _id: Number(req.params.id),
+            user: req.user.id
+        });
+
+        if (!deleted) {
+            return res.status(404).json({ message: "Item not found" });
+        }
+
+        // DELETE IMAGE FILE IF EXISTS
+        if (deleted.image && fs.existsSync(`.${deleted.image}`)) {
+            fs.unlinkSync(`.${deleted.image}`);
+        }
+
+        res.json({ message: "Deleted" });
+
+    } catch (err) {
+        res.status(500).json({ message: "Delete failed" });
+    }
+});
 /* =========================
    SALES API
 ========================= */
