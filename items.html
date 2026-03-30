@@ -422,16 +422,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (file) form.append("image", file);
 
-        await fetch("/api/items", {
-            method: "POST",
-            body: form,
-            credentials: "include"
-        });
-        const data = await res.json();
-        if (!res.ok) {
-            alert(data.message || "Add failed");
-            return;
-        }
+        const res = await fetch("/api/items", {
+        method: "POST",
+        body: form,
+        credentials: "include"
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        alert(data.message || "Add failed");
+        return;
+    }
 
         loadItems();
 
